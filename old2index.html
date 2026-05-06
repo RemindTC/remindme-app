@@ -285,10 +285,9 @@
       <div class="nav-item" onclick="setView('today')" id="nav-today"><span class="nav-icon">⚡</span> Today<span class="nav-count" id="count-today">0</span></div>
       <div class="nav-item" onclick="setView('completed')" id="nav-completed"><span class="nav-icon">✅</span> Completed<span class="nav-count" id="count-completed">0</span></div>
       <div class="nav-label" style="margin-top:12px;">Admin</div>
+      <div class="nav-item" onclick="setView('admin')" id="nav-admin"><span class="nav-icon">🛡️</span> Admin Panel</div>
       <div class="nav-label" style="margin-top:12px;">Admin</div>
-      <div class="nav-label" style="margin-top:12px;">Admin</div>
-      <div class="nav-label" style="margin-top:12px;">Admin</div>
-      <div class="nav-item" onclick="setView('admin')" id="nav-admin"><span class="nav-icon">&#x1F6E1;</span> Admin Panel</div>
+      <div class="nav-item" onclick="setView('admin')" id="nav-admin"><span class="nav-icon">🛡️</span> Admin Panel</div>
       <div class="nav-label" style="margin-top:12px;">Priority</div>
       <div class="nav-item" onclick="setView('urgent')" id="nav-urgent"><span class="nav-icon">🔴</span> Urgent<span class="nav-count" id="count-urgent">0</span></div>
       <div class="nav-item" onclick="setView('high')" id="nav-high"><span class="nav-icon">🟠</span> High<span class="nav-count" id="count-high">0</span></div>
@@ -313,8 +312,7 @@
         <button class="btn btn-primary" onclick="openCreateModal()">+ New Reminder</button>
       </div>
     </div>
-    <div id="adminPanel" class="hidden" style="padding:28px 32px;flex:1;overflow-y:auto;"><div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--text);margin-bottom:20px;">&#x1F6E1;&#xFE0F; Admin Panel</div><div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;"><div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;"><span style="font-size:14px;font-weight:500;color:var(--text);">All Users</span><button onclick="loadAdminUsers()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;">&#x1F504; Refresh</button></div><div id="adminUserList" style="min-height:100px;"></div></div></div>
-    <div class="content" id="mainContent">
+    <div class="content">
       <!-- Stats -->
       <div class="stats-bar">
         <div class="stat-card"><div class="stat-value" id="stat-total">0</div><div class="stat-label">Total</div></div>
@@ -641,7 +639,12 @@
   function setView(v) {
     currentView = v; selectedCalDay = null;
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-document.getElementById('nav-admin');
+    const adminPanel = document.getElementById('adminPanel');
+    const mainContent = document.getElementById('mainContent');
+    if (view === 'admin') {
+      if (adminPanel) adminPanel.classList.remove('hidden');
+      if (mainContent) mainContent.classList.add('hidden');
+      const navAdmin = document.getElementById('nav-admin');
       if (navAdmin) navAdmin.classList.add('active');
       loadAdminUsers();
       return;
@@ -1029,7 +1032,15 @@ document.getElementById('nav-admin');
   }
 
 
-  function confirmDate()
+  function confirmDate() {
+    const val = document.getElementById('fDue').value;
+    const display = document.getElementById('confirmedDateDisplay');
+    if (!val) { display.style.display='none'; return; }
+    const d = new Date(val);
+    const str = d.toLocaleDateString('en-US', {weekday:'long',year:'numeric',month:'long',day:'numeric'}) + ' at ' + d.toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'});
+    display.style.display = 'block';
+    display.innerHTML = '📅 Confirmed: <strong>' + str + '</strong>';
+  }
 
   async function loadAdminUsers() {
     const list = document.getElementById('adminUserList');
@@ -1077,7 +1088,15 @@ document.getElementById('nav-admin');
   }
 
 
-
+  function confirmDate() {
+    const val = document.getElementById('fDue').value;
+    const display = document.getElementById('confirmedDateDisplay');
+    if (!val) { display.style.display='none'; return; }
+    const d = new Date(val);
+    const str = d.toLocaleDateString('en-US', {weekday:'long',year:'numeric',month:'long',day:'numeric'}) + ' at ' + d.toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'});
+    display.style.display = 'block';
+    display.innerHTML = '📅 Confirmed: <strong>' + str + '</strong>';
+  }
 
   async function loadAdminUsers() {
     const list = document.getElementById('adminUserList');
