@@ -260,7 +260,7 @@
     <div class="auth-logo">
       <div class="auth-logo-text">RemindMe</div>
       <div class="auth-logo-sub">Your intelligent reminder system</div>
-      <div style="font-size:11px;color:var(--text-dim);margin-top:6px;letter-spacing:1px;">V1.03</div>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:6px;letter-spacing:1px;">V1.02</div>
     </div>
     <div class="auth-tabs">
       <button class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
@@ -1061,24 +1061,13 @@
 
 
 
-  function confirmDate() {
-    const val = document.getElementById('fDue') && document.getElementById('fDue').value;
-    const display = document.getElementById('confirmedDateDisplay');
-    if (!val || !display) return;
     const d = new Date(val);
     const str = d.toLocaleDateString('en-US', {weekday:'long',year:'numeric',month:'long',day:'numeric'}) + ' at ' + d.toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'});
     display.style.display = 'block';
-    display.innerHTML = 'Confirmed: <strong>' + str + '</strong>';
+    display.innerHTML = '📅 Confirmed: <strong>' + str + '</strong>';
   }
 
 
-  async function loadAdminUsers() {
-    const list = document.getElementById('adminUserList');
-    if (!list) return;
-    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">Loading...</div>';
-    try {
-      const res = await apiFetch('/auth/admin/users');
-      if (!res || !res.ok) { list.innerHTML = '<div style="padding:20px;color:#ff6b6b;font-size:13px;">Failed to load users.</div>'; return; }
       const data = await res.json();
       if (!data.length) { list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">No users found.</div>'; return; }
       list.innerHTML = data.map(u => `
