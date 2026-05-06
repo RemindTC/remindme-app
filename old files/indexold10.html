@@ -260,7 +260,7 @@
     <div class="auth-logo">
       <div class="auth-logo-text">RemindMe</div>
       <div class="auth-logo-sub">Your intelligent reminder system</div>
-      <div style="font-size:11px;color:var(--text-dim);margin-top:6px;letter-spacing:1px;">V1.04</div>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:6px;letter-spacing:1px;">V1.03</div>
     </div>
     <div class="auth-tabs">
       <button class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
@@ -1061,12 +1061,61 @@
 
 
 
+  function confirmDate() {
+    const val = document.getElementById('fDue') && document.getElementById('fDue').value;
+    const display = document.getElementById('confirmedDateDisplay');
+    if (!val || !display) return;
+    const d = new Date(val);
+    const str = d.toLocaleDateString('en-US', {weekday:'long',year:'numeric',month:'long',day:'numeric'}) + ' at ' + d.toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'});
+    display.style.display = 'block';
+    display.innerHTML = 'Confirmed: <strong>' + str + '</strong>';
+  }
 
 
+  async function loadAdminUsers() {
+    const list = document.getElementById('adminUserList');
+    if (!list) return;
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">Loading...</div>';
+    try {
+      const res = await apiFetch('/auth/admin/users');
+      if (!res || !res.ok) { list.innerHTML = '<div style="padding:20px;color:#ff6b6b;font-size:13px;">Failed to load users.</div>'; return; }
+      const data = await res.json();
+      if (!data.length) { list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">No users found.</div>'; return; }
+      list.innerHTML = data.map(u => `
+        <div class="admin-user-row">
+          <div class="admin-user-info">
+            <span class="admin-user-email">${u.email} ${u.name ? '('+u.name+')' : ''}</span>
+            <span class="admin-user-meta">ID: ${u.id} &nbsp;·&nbsp; Joined: ${new Date(u.created_at).toLocaleDateString()} ${u.blocked ? '' : ''}</span>
+          </div>
+          <div class="admin-actions">
+            ${u.blocked
+              ? `<button class="admin-btn admin-btn-block" onclick="adminUnblock(${u.id})">✓ Unblock</button>`
+              : `<button class="admin-btn admin-btn-block" onclick="adminBlock(${u.id})">🚫 Block</button>`}
+            <button class="admin-btn admin-btn-delete" onclick="adminDelete(${u.id}, '${u.email}')">🗑 Delete</button>
+          </div>
+        </div>`).join('');
+    } catch(e) { list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--danger);font-size:13px;">Error: ' + e.message + '</div>'; }
+  }
 
+);
+    if (res && res.ok) { toast('User blocked', 'success'); loadAdminUsers(); }
+    else toast('Failed to block user', 'error');
+  }
 
+);
+    if (res && res.ok) { toast('User unblocked', 'success'); loadAdminUsers(); }
+    else toast('Failed to unblock user', 'error');
+  }
 
+);
+    if (res && res.ok) { toast('User deleted', 'success'); loadAdminUsers(); }
+    else toast('Failed to delete user', 'error');
+  }
 
+);
+    display.style.display = 'block';
+    display.innerHTML = '📅 Confirmed: <strong>' + str + '</strong>';
+  }
  catch(e) { list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--danger);font-size:13px;">Error: ' + e.message + '</div>'; }
   }
 
