@@ -218,17 +218,6 @@
     .admin-user-email { font-size:14px; color:var(--text); font-weight:500; }
     .admin-user-meta { font-size:11px; color:var(--text-muted); }
     .admin-actions { display:flex; gap:6px; }
-    .admin-btn { padding:5px 12px; border-radius:6px; font-size:12px; cursor:pointer; border:1px solid; font-weight:500; }
-    .admin-btn-block { background:rgba(255,209,102,0.1); color:var(--warning,#ffd166); border-color:rgba(255,209,102,0.3); }
-    .admin-btn-delete { background:rgba(255,107,107,0.1); color:var(--danger,#ff6b6b); border-color:rgba(255,107,107,0.3); }
-
-
-    .admin-user-row { display:flex; align-items:center; justify-content:space-between; padding:12px 20px; border-bottom:1px solid var(--border); }
-    .admin-user-row:last-child { border-bottom:none; }
-    .admin-user-info { display:flex; flex-direction:column; gap:2px; }
-    .admin-user-email { font-size:14px; color:var(--text); font-weight:500; }
-    .admin-user-meta { font-size:11px; color:var(--text-muted); }
-    .admin-actions { display:flex; gap:6px; }
     .admin-btn { padding:5px 12px; border-radius:6px; font-size:12px; cursor:pointer; border:1px solid; font-family:"DM Sans",sans-serif; font-weight:500; transition:all 0.15s; }
     .admin-btn-block { background:rgba(255,209,102,0.1); color:var(--warning); border-color:rgba(255,209,102,0.3); }
     .admin-btn-block:hover { background:rgba(255,209,102,0.2); }
@@ -260,7 +249,7 @@
     <div class="auth-logo">
       <div class="auth-logo-text">RemindMe</div>
       <div class="auth-logo-sub">Your intelligent reminder system</div>
-      <div style="font-size:11px;color:var(--text-dim);margin-top:6px;letter-spacing:1px;">V1.01</div>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:6px;letter-spacing:1px;">V1.00</div>
     </div>
     <div class="auth-tabs">
       <button class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
@@ -268,13 +257,13 @@
     </div>
     <div id="loginForm">
       <div class="form-group"><label class="form-label">Email</label><input class="form-control" type="email" id="loginEmail" placeholder="you@example.com"></div>
-      <div class="form-group"><label class="form-label">Password</label><div class="pwd-wrap"><input class="form-control" type="text" id="loginPassword" placeholder="Enter password" autocomplete="current-password"></div></div>
+      <div class="form-group"><label class="form-label">Password</label><div class="pwd-wrap"><input class="form-control" type="password" id="loginPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()"><button type="button" class="eye-btn" id="eyeLogin" onclick="togglePwd('loginPassword','eyeLogin')">👁</button></div></div>
       <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;" onclick="login()">Sign In →</button>
     </div>
     <div id="registerForm" class="hidden">
       <div class="form-group"><label class="form-label">Name</label><input class="form-control" type="text" id="regName" placeholder="Your name"></div>
       <div class="form-group"><label class="form-label">Email</label><input class="form-control" type="email" id="regEmail" placeholder="you@example.com"></div>
-      <div class="form-group"><label class="form-label">Password</label><div class="pwd-wrap"><input class="form-control" type="text" id="regPassword" placeholder="Create password" autocomplete="new-password"></div></div>
+      <div class="form-group"><label class="form-label">Password</label><div class="pwd-wrap"><input class="form-control" type="password" id="regPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')register()"><button type="button" class="eye-btn" id="eyeReg" onclick="togglePwd('regPassword','eyeReg')">👁</button></div></div>
       <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;" onclick="register()">Create Account →</button>
     </div>
     <div class="auth-footer">Your data stays on your local server</div>
@@ -296,9 +285,8 @@
       <div class="nav-item" onclick="setView('today')" id="nav-today"><span class="nav-icon">⚡</span> Today<span class="nav-count" id="count-today">0</span></div>
       <div class="nav-item" onclick="setView('completed')" id="nav-completed"><span class="nav-icon">✅</span> Completed<span class="nav-count" id="count-completed">0</span></div>
       <div class="nav-label" style="margin-top:12px;">Admin</div>
-      <div class="nav-item" onclick="setView('admin')" id="nav-admin"><span class="nav-icon">🛡️</span> Admin Panel</div>
       <div class="nav-label" style="margin-top:12px;">Admin</div>
-      <div class="nav-item" onclick="setView('admin')" id="nav-admin"><span class="nav-icon">🛡️</span> Admin Panel</div>
+      <div class="nav-label" style="margin-top:12px;">Admin</div>
       <div class="nav-label" style="margin-top:12px;">Admin</div>
       <div class="nav-item" onclick="setView('admin')" id="nav-admin"><span class="nav-icon">&#x1F6E1;</span> Admin Panel</div>
       <div class="nav-label" style="margin-top:12px;">Priority</div>
@@ -325,8 +313,8 @@
         <button class="btn btn-primary" onclick="openCreateModal()">+ New Reminder</button>
       </div>
     </div>
-    <div id="adminPanel" class="hidden" style="padding:28px 32px;flex:1;overflow-y:auto;"><div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:20px;">Admin Panel</div><div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;"><div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;"><span style="font-size:14px;font-weight:500;color:var(--text);">All Users</span><button onclick="loadAdminUsers()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;">Refresh</button></div><div id="adminUserList" style="min-height:100px;"></div></div></div>
-    <div class="content">
+    <div id="adminPanel" class="hidden" style="padding:28px 32px;flex:1;overflow-y:auto;"><div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--text);margin-bottom:20px;">&#x1F6E1;&#xFE0F; Admin Panel</div><div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;"><div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;"><span style="font-size:14px;font-weight:500;color:var(--text);">All Users</span><button onclick="loadAdminUsers()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;">&#x1F504; Refresh</button></div><div id="adminUserList" style="min-height:100px;"></div></div></div>
+    <div class="content" id="mainContent">
       <!-- Stats -->
       <div class="stats-bar">
         <div class="stat-card"><div class="stat-value" id="stat-total">0</div><div class="stat-label">Total</div></div>
@@ -480,7 +468,6 @@
   }
 
   function showAuth() {
-    loadSavedCredentials();
     document.getElementById('authScreen').classList.remove('hidden');
     document.getElementById('appScreen').classList.add('hidden');
     checkServer();
@@ -506,8 +493,6 @@
   }
 
   async function login() {
-    const emailVal = document.getElementById('loginEmail').value.trim();
-    const passVal = document.getElementById('loginPassword').value;
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
     if (!email || !password) return toast('Please fill in all fields', 'error');
@@ -627,7 +612,7 @@
       const isOverdue = due && due < now && !r.completed;
       return `
         <div class="reminder-card ${r.completed ? 'completed' : ''}" style="--priority-color: ${priorityColors[r.priority] || 'var(--border)'}">
-          <div class="reminder-check" onclick=\"playCompletionSound(); toggleComplete(${r.id}, ${r.completed})">${r.completed ? '✓' : ''}</div>
+          <div class="reminder-check" onclick="toggleComplete(${r.id}, ${r.completed})">${r.completed ? '✓' : ''}</div>
           <div class="reminder-body">
             <div class="reminder-title">${escHtml(r.title)}</div>
             ${r.description ? `<div class="reminder-desc">${escHtml(r.description)}</div>` : ''}
@@ -656,25 +641,7 @@
   function setView(v) {
     currentView = v; selectedCalDay = null;
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    const adminPanel = document.getElementById('adminPanel');
-    const mainContent = document.querySelector('.content');
-    if (view === 'admin') {
-      if (adminPanel) adminPanel.classList.remove('hidden');
-      if (mainContent) mainContent.classList.add('hidden');
-      const navAdmin = document.getElementById('nav-admin');
-      if (navAdmin) navAdmin.classList.add('active');
-      loadAdminUsers();
-      return;
-    } else {
-      if (adminPanel) adminPanel.classList.add('hidden');
-      if (mainContent) mainContent.classList.remove('hidden');
-    }
-    const adminPanel = document.getElementById('adminPanel');
-    const mainContent = document.getElementById('mainContent');
-    if (view === 'admin') {
-      if (adminPanel) adminPanel.classList.remove('hidden');
-      if (mainContent) mainContent.classList.add('hidden');
-      const navAdmin = document.getElementById('nav-admin');
+document.getElementById('nav-admin');
       if (navAdmin) navAdmin.classList.add('active');
       loadAdminUsers();
       return;
@@ -813,7 +780,6 @@
 
   // ── Reminders CRUD ────────────────────────────────────────────────────────
   async function toggleComplete(id, completed) {
-    playCompletionSound();
     try {
       await apiFetch(`/reminders/${id}`, { method: 'PATCH', body: JSON.stringify({ completed: !completed }) });
       await loadReminders();
@@ -1063,15 +1029,7 @@
   }
 
 
-  function confirmDate() {
-    const val = document.getElementById('fDue').value;
-    const display = document.getElementById('confirmedDateDisplay');
-    if (!val) { display.style.display='none'; return; }
-    const d = new Date(val);
-    const str = d.toLocaleDateString('en-US', {weekday:'long',year:'numeric',month:'long',day:'numeric'}) + ' at ' + d.toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'});
-    display.style.display = 'block';
-    display.innerHTML = '📅 Confirmed: <strong>' + str + '</strong>';
-  }
+  function confirmDate()
 
   async function loadAdminUsers() {
     const list = document.getElementById('adminUserList');
@@ -1119,15 +1077,7 @@
   }
 
 
-  function confirmDate() {
-    const val = document.getElementById('fDue').value;
-    const display = document.getElementById('confirmedDateDisplay');
-    if (!val) { display.style.display='none'; return; }
-    const d = new Date(val);
-    const str = d.toLocaleDateString('en-US', {weekday:'long',year:'numeric',month:'long',day:'numeric'}) + ' at ' + d.toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'});
-    display.style.display = 'block';
-    display.innerHTML = '📅 Confirmed: <strong>' + str + '</strong>';
-  }
+
 
   async function loadAdminUsers() {
     const list = document.getElementById('adminUserList');
@@ -1173,57 +1123,6 @@
     if (res && res.ok) { toast('User deleted', 'success'); loadAdminUsers(); }
     else toast('Failed to delete user', 'error');
   }
-
-
-  function saveLoginCredentials(email, password) {
-    localStorage.setItem('rm_saved_email', email);
-    localStorage.setItem('rm_saved_password', password);
-  }
-
-  function loadSavedCredentials() {
-    const email = localStorage.getItem('rm_saved_email');
-    const password = localStorage.getItem('rm_saved_password');
-    if (email) { const el = document.getElementById('loginEmail'); if(el) el.value = email; }
-    if (password) { const el = document.getElementById('loginPassword'); if(el) el.value = password; }
-  }
-
-
-  function playCompletionSound() {
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
-      notes.forEach((freq, i) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.type = 'sine';
-        osc.frequency.value = freq;
-        gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.12);
-        gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + i * 0.12 + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.25);
-        osc.start(ctx.currentTime + i * 0.12);
-        osc.stop(ctx.currentTime + i * 0.12 + 0.3);
-      });
-    } catch(e) {}
-  }
-
-
-  async function loadAdminUsers() {
-    const list = document.getElementById('adminUserList');
-    if (!list) return;
-    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">Loading...</div>';
-    try {
-      const res = await apiFetch('/auth/admin/users');
-      if (!res || !res.ok) { list.innerHTML = '<div style="padding:20px;color:var(--danger,#ff6b6b);font-size:13px;">Failed to load users.</div>'; return; }
-      const data = await res.json();
-      if (!data.length) { list.innerHTML = '<div style="padding:20px;color:var(--text-muted);font-size:13px;">No users found.</div>'; return; }
-      list.innerHTML = data.map(u => '<div class="admin-user-row"><div class="admin-user-info"><span class="admin-user-email">' + u.email + (u.blocked ? ' [BLOCKED]' : '') + '</span><span class="admin-user-meta">ID: ' + u.id + '</span></div><div class="admin-actions">' + (u.blocked ? '<button class="admin-btn admin-btn-block" onclick="adminUnblock('+u.id+')">Unblock</button>' : '<button class="admin-btn admin-btn-block" onclick="adminBlock('+u.id+')">Block</button>') + '<button class="admin-btn admin-btn-delete" onclick="adminDelete('+u.id+',''+u.email+'')">Delete</button></div></div>').join('');
-    } catch(e) { list.innerHTML = '<div style="padding:20px;color:var(--danger,#ff6b6b);font-size:13px;">Error: ' + e.message + '</div>'; }
-  }
-  async function adminBlock(id) { if(!confirm('Block user?'))return; const r=await apiFetch('/auth/admin/users/'+id+'/block',{method:'POST'}); if(r&&r.ok)loadAdminUsers(); }
-  async function adminUnblock(id) { const r=await apiFetch('/auth/admin/users/'+id+'/unblock',{method:'POST'}); if(r&&r.ok)loadAdminUsers(); }
-  async function adminDelete(id,email) { if(!confirm('Delete '+email+'?'))return; const r=await apiFetch('/auth/admin/users/'+id,{method:'DELETE'}); if(r&&r.ok)loadAdminUsers(); }
 
   init();
 </script>
