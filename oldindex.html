@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RemindMe</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#b8f566">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="RemindMe">
+  <link rel="apple-touch-icon" href="icon-192.png">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -210,7 +217,99 @@
     .loading { display: flex; align-items: center; justify-content: center; padding: 60px; color: var(--text-muted); gap: 10px; }
     .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.6s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Mobile / PWA styles ── */
+    @media (max-width: 768px) {
+      .app { flex-direction: column; }
+      .sidebar {
+        width: 100%;
+        min-width: unset;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: 0;
+      }
+      .sidebar-logo { padding: 12px 16px; border-bottom: none; border-right: 1px solid var(--border); }
+      .logo-sub { display: none; }
+      .sidebar-nav {
+        display: flex;
+        flex-direction: row;
+        padding: 8px;
+        gap: 4px;
+        overflow-x: auto;
+        flex: 1;
+      }
+      .nav-label { display: none; }
+      .nav-item {
+        flex-direction: column;
+        padding: 6px 10px;
+        gap: 2px;
+        font-size: 10px;
+        white-space: nowrap;
+        min-width: 56px;
+        text-align: center;
+        margin-bottom: 0;
+      }
+      .nav-icon { font-size: 18px; width: auto; }
+      .nav-count { display: none; }
+      .sidebar-footer { display: none; }
+      .main { flex: 1; min-height: 0; }
+      .topbar { padding: 12px 16px; }
+      .page-title { font-size: 18px; }
+      .content { padding: 16px; }
+      .stats-bar { grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 16px; }
+      .stat-value { font-size: 22px; }
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .calendar-widget { order: 2; }
+      .audio-panel { order: 3; }
+      .filter-bar { gap: 6px; }
+      .search-box input { width: 140px; }
+      .modal { max-height: 95vh; border-radius: 16px 16px 0 0; }
+      .modal-overlay { align-items: flex-end; padding: 0; }
+      .btn { padding: 8px 14px; font-size: 12px; }
+      .reminder-card { padding: 12px 14px; }
+      .reminder-actions { opacity: 1; }
+      .form-row { grid-template-columns: 1fr; }
+      #profilePanel { padding: 16px; }
+    }
+
+    /* ── Install PWA banner ── */
+    .install-banner {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 200;
+      animation: slideUp 0.3s ease;
+    }
+    .install-banner-icon { font-size: 28px; }
+    .install-banner-text { flex: 1; }
+    .install-banner-title { font-size: 14px; font-weight: 600; color: var(--text); }
+    .install-banner-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .install-banner-btn { background: var(--accent); color: var(--bg); border: none; border-radius: var(--radius-sm); padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: "DM Sans", sans-serif; white-space: nowrap; }
+    .install-banner-close { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 18px; padding: 4px; }
     .hidden { display: none !important; }
+
+    .admin-user-row { display:flex; align-items:center; justify-content:space-between; padding:12px 20px; border-bottom:1px solid var(--border); }
+    .admin-user-row:last-child { border-bottom:none; }
+    .admin-user-info { display:flex; flex-direction:column; gap:2px; }
+    .admin-user-email { font-size:14px; color:var(--text); font-weight:500; }
+    .admin-user-meta { font-size:11px; color:var(--text-muted); }
+    .admin-actions { display:flex; gap:6px; }
+    .admin-btn { padding:5px 12px; border-radius:6px; font-size:12px; cursor:pointer; border:1px solid; font-family:"DM Sans",sans-serif; font-weight:500; transition:all 0.15s; }
+    .admin-btn-block { background:rgba(255,209,102,0.1); color:var(--warning); border-color:rgba(255,209,102,0.3); }
+    .admin-btn-block:hover { background:rgba(255,209,102,0.2); }
+    .admin-btn-delete { background:rgba(255,107,107,0.1); color:var(--danger); border-color:rgba(255,107,107,0.3); }
+    .admin-btn-delete:hover { background:rgba(255,107,107,0.2); }
+
 
     .admin-user-row { display:flex; align-items:center; justify-content:space-between; padding:12px 20px; border-bottom:1px solid var(--border); }
     .admin-user-row:last-child { border-bottom:none; }
@@ -250,6 +349,8 @@
       <div class="auth-logo-text">RemindMe</div>
       <div class="auth-logo-sub">Your intelligent reminder system</div>
       <div style="font-size:11px;color:var(--text-dim);margin-top:6px;letter-spacing:1px;">V1.00</div>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:6px;letter-spacing:1px;">V1.00</div>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:6px;letter-spacing:1px;">V1.00</div>
     </div>
     <div class="auth-tabs">
       <button class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
@@ -288,6 +389,10 @@
       <div class="nav-item" onclick="setView('admin')" id="nav-admin"><span class="nav-icon">🛡️</span> Admin Panel</div>
       <div class="nav-label" style="margin-top:12px;">Admin</div>
       <div class="nav-item" onclick="setView('admin')" id="nav-admin"><span class="nav-icon">🛡️</span> Admin Panel</div>
+      <div class="nav-label" style="margin-top:12px;">Admin</div>
+      <div class="nav-item" onclick="setView('admin')" id="nav-admin"><span class="nav-icon">🛡️</span> Admin Panel</div>
+      <div class="nav-label" style="margin-top:12px;">Account</div>
+      <div class="nav-item" onclick="setView('profile')" id="nav-profile"><span class="nav-icon">👤</span> My Profile</div>
       <div class="nav-label" style="margin-top:12px;">Priority</div>
       <div class="nav-item" onclick="setView('urgent')" id="nav-urgent"><span class="nav-icon">🔴</span> Urgent<span class="nav-count" id="count-urgent">0</span></div>
       <div class="nav-item" onclick="setView('high')" id="nav-high"><span class="nav-icon">🟠</span> High<span class="nav-count" id="count-high">0</span></div>
@@ -363,6 +468,36 @@
   </main>
 </div>
 
+<!-- Profile Panel -->
+<div id="profilePanel" class="hidden" style="padding:28px 32px;flex:1;overflow-y:auto;">
+  <div style="max-width:500px;">
+    <h2 style="font-family:Syne,sans-serif;font-size:22px;font-weight:700;color:var(--text);margin-bottom:6px;">My Profile</h2>
+    <p style="color:var(--text-muted);font-size:13px;margin-bottom:24px;">Update your contact details and notification preferences.</p>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:16px;">
+      <div class="form-group"><label class="form-label">Name</label><input class="form-control" type="text" id="profileName" placeholder="Your name"></div>
+      <div class="form-group"><label class="form-label">Email</label><input class="form-control" type="email" id="profileEmail" placeholder="your@email.com"></div>
+      <div class="form-group">
+        <label class="form-label">Phone Number <span style="color:var(--text-muted);font-weight:400;">(for SMS & calls)</span></label>
+        <input class="form-control" type="tel" id="profilePhone" placeholder="+1 604 555 0123">
+        <div style="font-size:11px;color:var(--text-dim);margin-top:4px;">Include country code e.g. +1 for Canada/US</div>
+      </div>
+      <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;">
+      <div style="font-family:Syne,sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;">🔔 Notification Channels</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Test your notification setup before creating reminders.</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button class="btn btn-ghost" onclick="sendTestNotification('email')" style="justify-content:flex-start;gap:10px;">📧 Send Test Email</button>
+        <button class="btn btn-ghost" onclick="sendTestNotification('sms')" style="justify-content:flex-start;gap:10px;">💬 Send Test SMS</button>
+        <button class="btn btn-ghost" onclick="sendTestNotification('call')" style="justify-content:flex-start;gap:10px;">📞 Send Test Phone Call</button>
+      </div>
+      <div id="testNotifStatus" style="margin-top:12px;font-size:12px;color:var(--text-muted);min-height:20px;"></div>
+    </div>
+  </div>
+</div>
+
 <!-- Create/Edit Modal -->
 <div id="reminderModal" class="modal-overlay hidden">
   <div class="modal">
@@ -434,6 +569,25 @@
         <!-- Test email -->
         <button class="test-email-btn hidden" id="testEmailBtn" onclick="sendTestEmail()">📧 Send Test Email to My Address</button>
       </div>
+
+      <!-- Notification channels -->
+      <div class="form-group">
+        <label class="form-label">Notify me via</label>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div class="form-toggle" onclick="toggleNotifyChannel('email')">
+            <div class="toggle-switch on" id="toggle-email"></div>
+            <div><div class="toggle-label">📧 Email</div><div class="toggle-sub">Send reminder to your email</div></div>
+          </div>
+          <div class="form-toggle" onclick="toggleNotifyChannel('sms')">
+            <div class="toggle-switch" id="toggle-sms"></div>
+            <div><div class="toggle-label">💬 SMS Text Message</div><div class="toggle-sub">Send reminder to your phone</div></div>
+          </div>
+          <div class="form-toggle" onclick="toggleNotifyChannel('call')">
+            <div class="toggle-switch" id="toggle-call"></div>
+            <div><div class="toggle-label">📞 Phone Call</div><div class="toggle-sub">Call your phone with the reminder</div></div>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
@@ -444,8 +598,19 @@
 
 <div class="toast-container" id="toastContainer"></div>
 
+<!-- PWA Install Banner -->
+<div class="install-banner hidden" id="installBanner">
+  <div class="install-banner-icon">🔔</div>
+  <div class="install-banner-text">
+    <div class="install-banner-title">Install RemindMe</div>
+    <div class="install-banner-sub">Add to your home screen for the best experience</div>
+  </div>
+  <button class="install-banner-btn" onclick="installPWA()">Install</button>
+  <button class="install-banner-close" onclick="dismissInstall()">✕</button>
+</div>
+
 <script>
-  const API = window.location.origin;
+  const API = 'http://localhost:3000';
   let token = localStorage.getItem('token');
   let currentUser = JSON.parse(localStorage.getItem('user') || 'null');
   let allReminders = [];
@@ -463,6 +628,7 @@
     if (token && currentUser) { showApp(); }
     else { showAuth(); }
     loadVoices();
+    initPWA();
   }
 
   function showAuth() {
@@ -639,32 +805,23 @@
   function setView(v) {
     currentView = v; selectedCalDay = null;
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    const adminPanel = document.getElementById('adminPanel');
-    const mainContent = document.getElementById('mainContent');
-    if (view === 'admin') {
-      if (adminPanel) adminPanel.classList.remove('hidden');
-      if (mainContent) mainContent.classList.add('hidden');
-      const navAdmin = document.getElementById('nav-admin');
-      if (navAdmin) navAdmin.classList.add('active');
-      loadAdminUsers();
+    const profilePanel = document.getElementById('profilePanel');
+    const contentEl = document.getElementById('mainContent') || document.querySelector('.content');
+
+    if (v === 'profile') {
+      if (profilePanel) profilePanel.classList.remove('hidden');
+      if (contentEl) contentEl.classList.add('hidden');
+      document.getElementById('nav-profile').classList.add('active');
+      document.getElementById('pageTitle').textContent = 'My Profile';
+      loadProfile();
       return;
     } else {
-      if (adminPanel) adminPanel.classList.add('hidden');
-      if (mainContent) mainContent.classList.remove('hidden');
+      if (profilePanel) profilePanel.classList.add('hidden');
+      if (contentEl) contentEl.classList.remove('hidden');
     }
-    const adminPanel = document.getElementById('adminPanel');
-    const mainContent = document.getElementById('mainContent');
-    if (view === 'admin') {
-      if (adminPanel) { adminPanel.classList.remove('hidden'); }
-      if (mainContent) { mainContent.classList.add('hidden'); }
-      document.getElementById('nav-admin') && document.getElementById('nav-admin').classList.add('active');
-      loadAdminUsers();
-      return;
-    } else {
-      if (adminPanel) { adminPanel.classList.add('hidden'); }
-      if (mainContent) { mainContent.classList.remove('hidden'); }
-    }
-    document.getElementById(`nav-${v}`).classList.add('active');
+
+    const navEl = document.getElementById(`nav-${v}`);
+    if (navEl) navEl.classList.add('active');
     const titles = { all: 'All Reminders', upcoming: 'Upcoming', today: 'Today', completed: 'Completed', urgent: 'Urgent', high: 'High Priority' };
     document.getElementById('pageTitle').textContent = titles[v] || 'Reminders';
     renderCalendar(); renderReminders();
@@ -861,7 +1018,7 @@
     const desc = document.getElementById('fDesc').value.trim();
     if (!desc) return toast('Description is required', 'error');
     const due = document.getElementById('fDue').value;
-    const body = { title, description: desc, due_at: due ? new Date(due).toISOString() : undefined, priority: document.getElementById('fPriority').value, recurrence: document.getElementById('fRecurrence').value, notify_email: emailNotify, notify_minutes_before: parseInt(document.getElementById('fNotifyMins').value) || 30 };
+    const body = { title, description: desc, due_at: due ? new Date(due).toISOString() : undefined, priority: document.getElementById('fPriority').value, recurrence: document.getElementById('fRecurrence').value, notify_email: notifyEmail, notify_sms: notifySMS, notify_call: notifyCall, notify_format: reminderFormat, notify_mood: funnyMood, notify_minutes_before: parseInt(document.getElementById('fNotifyMins').value) || 30 };
     try {
       if (editingId) { await apiFetch(`/reminders/${editingId}`, { method: 'PATCH', body: JSON.stringify(body) }); toast('Reminder updated!', 'success'); }
       else { await apiFetch('/reminders', { method: 'POST', body: JSON.stringify(body) }); toast('Reminder created!', 'success'); }
@@ -892,6 +1049,85 @@
     setTimeout(() => el.remove(), 3500);
   }
 
+
+
+  // ── Notification channels ─────────────────────────────────────────────────
+  let notifyEmail = true;
+  let notifySMS = false;
+  let notifyCall = false;
+
+  function toggleNotifyChannel(channel) {
+    if (channel === 'email') {
+      notifyEmail = !notifyEmail;
+      document.getElementById('toggle-email').className = 'toggle-switch' + (notifyEmail ? ' on' : '');
+    } else if (channel === 'sms') {
+      notifySMS = !notifySMS;
+      document.getElementById('toggle-sms').className = 'toggle-switch' + (notifySMS ? ' on' : '');
+    } else if (channel === 'call') {
+      notifyCall = !notifyCall;
+      document.getElementById('toggle-call').className = 'toggle-switch' + (notifyCall ? ' on' : '');
+    }
+  }
+
+  // ── Profile ───────────────────────────────────────────────────────────────
+  async function loadProfile() {
+    try {
+      const res = await apiFetch('/profile');
+      if (!res) return;
+      const data = await res.json();
+      document.getElementById('profileName').value = data.name || '';
+      document.getElementById('profileEmail').value = data.email || '';
+      document.getElementById('profilePhone').value = data.phone || '';
+    } catch (err) { console.error('Load profile error:', err); }
+  }
+
+  async function saveProfile() {
+    const name = document.getElementById('profileName').value.trim();
+    const email = document.getElementById('profileEmail').value.trim();
+    const phone = document.getElementById('profilePhone').value.trim();
+    try {
+      const res = await apiFetch('/profile', {
+        method: 'PATCH',
+        body: JSON.stringify({ name, email, phone })
+      });
+      if (res && res.ok) {
+        const data = await res.json();
+        currentUser = { ...currentUser, ...data };
+        localStorage.setItem('user', JSON.stringify(currentUser));
+        document.getElementById('userName').textContent = data.name || data.email;
+        document.getElementById('userAvatar').textContent = (data.name || data.email)[0].toUpperCase();
+        toast('Profile saved!', 'success');
+      } else {
+        toast('Failed to save profile', 'error');
+      }
+    } catch (err) { toast('Failed to save profile', 'error'); }
+  }
+
+  async function sendTestNotification(type) {
+    const status = document.getElementById('testNotifStatus');
+    status.textContent = '⏳ Sending...';
+    try {
+      const endpoint = type === 'sms' ? '/reminders/test-sms' : '/reminders/test-email';
+      const res = await apiFetch(endpoint, {
+        method: 'POST',
+        body: JSON.stringify({ title: 'Test Reminder', format: 'email', mood: 'nice' })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        status.textContent = '✅ ' + (data.message || 'Sent!');
+        status.style.color = '#b8f566';
+        toast(data.message || 'Test sent!', 'success');
+      } else {
+        status.textContent = '❌ ' + (data.error || 'Failed');
+        status.style.color = '#ff6b6b';
+        toast(data.error || 'Failed', 'error');
+      }
+    } catch (err) {
+      status.textContent = '❌ ' + err.message;
+      status.style.color = '#ff6b6b';
+      toast('Test failed', 'error');
+    }
+  }
 
   // ── Format state ──────────────────────────────────────────────────────────
   let reminderFormat = 'email';
@@ -1118,6 +1354,62 @@
               ? `<button class="admin-btn admin-btn-block" onclick="adminUnblock(${u.id})">✓ Unblock</button>`
               : `<button class="admin-btn admin-btn-block" onclick="adminBlock(${u.id})">🚫 Block</button>`}
             <button class="admin-btn admin-btn-delete" onclick="adminDelete(${u.id}, '${u.email}')">🗑 Delete</button>
+          </div>
+        </div>`).join('');
+    } catch(e) { list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--danger);font-size:13px;">Error: ' + e.message + '</div>'; }
+  }
+
+  async function adminBlock(userId) {
+    if (!confirm('Block this user? They will not be able to log in.')) return;
+    const res = await apiFetch('/auth/admin/users/' + userId + '/block', { method: 'POST' });
+    if (res && res.ok) { toast('User blocked', 'success'); loadAdminUsers(); }
+    else toast('Failed to block user', 'error');
+  }
+
+  async function adminUnblock(userId) {
+    const res = await apiFetch('/auth/admin/users/' + userId + '/unblock', { method: 'POST' });
+    if (res && res.ok) { toast('User unblocked', 'success'); loadAdminUsers(); }
+    else toast('Failed to unblock user', 'error');
+  }
+
+  async function adminDelete(userId, email) {
+    if (!confirm('Permanently delete user ' + email + '? This cannot be undone.')) return;
+    const res = await apiFetch('/auth/admin/users/' + userId, { method: 'DELETE' });
+    if (res && res.ok) { toast('User deleted', 'success'); loadAdminUsers(); }
+    else toast('Failed to delete user', 'error');
+  }
+
+
+  function confirmDate() {
+    const val = document.getElementById('fDue').value;
+    const display = document.getElementById('confirmedDateDisplay');
+    if (!val) { display.style.display='none'; return; }
+    const d = new Date(val);
+    const str = d.toLocaleDateString('en-US', {weekday:'long',year:'numeric',month:'long',day:'numeric'}) + ' at ' + d.toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'});
+    display.style.display = 'block';
+    display.innerHTML = '📅 Confirmed: <strong>' + str + '</strong>';
+  }
+
+  async function loadAdminUsers() {
+    const list = document.getElementById('adminUserList');
+    if (!list) return;
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">Loading...</div>';
+    try {
+      const res = await apiFetch('/auth/admin/users');
+      if (!res || !res.ok) { list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--danger);font-size:13px;">Failed to load users.</div>'; return; }
+      const data = await res.json();
+      if (!data.length) { list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">No users found.</div>'; return; }
+      list.innerHTML = data.map(u => `
+        <div class="admin-user-row">
+          <div class="admin-user-info">
+            <span class="admin-user-email">${u.email}${u.name ? ' ('+u.name+')' : ''}${u.blocked ? ' <span style="background:rgba(255,107,107,0.15);color:var(--danger);padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600;">BLOCKED</span>' : ''}</span>
+            <span class="admin-user-meta">ID: ${u.id} · Joined: ${new Date(u.created_at).toLocaleDateString()}</span>
+          </div>
+          <div class="admin-actions">
+            ${u.blocked
+              ? '<button class="admin-btn admin-btn-block" onclick="adminUnblock('+u.id+')">✓ Unblock</button>'
+              : '<button class="admin-btn admin-btn-block" onclick="adminBlock('+u.id+')">🚫 Block</button>'}
+            <button class="admin-btn admin-btn-delete" onclick="adminDelete('+u.id+', ''+u.email+'')">🗑 Delete</button>
           </div>
         </div>`).join('');
     } catch(e) { list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--danger);font-size:13px;">Error: ' + e.message + '</div>'; }
