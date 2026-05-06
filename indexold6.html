@@ -688,10 +688,10 @@
       if (adminPanel) adminPanel.classList.add('hidden');
       if (mainContent) mainContent.classList.remove('hidden');
     }
-    const __adminPanel22 = document.getElementById('_adminPanel2');
-    const _mainContent2 = document.getElementById('mainContent');
+    const adminPanel = document.getElementById('adminPanel');
+    const mainContent = document.getElementById('mainContent');
     if (view === 'admin') {
-      if (_adminPanel2) { _adminPanel2.classList.remove('hidden'); }
+      if (adminPanel) { adminPanel.classList.remove('hidden'); }
       if (mainContent) { mainContent.classList.add('hidden'); }
       document.getElementById('nav-admin') && document.getElementById('nav-admin').classList.add('active');
       loadAdminUsers();
