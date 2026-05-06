@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RemindMe</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0c0f0a; --surface: #141714; --surface2: #1c201b; --border: #2a2e29;
+      --accent: #b8f566; --accent-dim: #8bc23e; --accent-glow: rgba(184,245,102,0.15);
+      --text: #e8ede5; --text-muted: #7a8a76; --text-dim: #4a5547;
+      --danger: #ff6b6b; --warning: #ffd166;
+      --low: #6bcfff; --medium: #b8f566; --high: #ffd166; --urgent: #ff6b6b;
+      --radius: 12px; --radius-sm: 8px;
+    }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 15px; line-height: 1.5; overflow-x: hidden; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    .app { display: flex; height: 100vh; }
+    .sidebar { width: 260px; min-width: 260px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: relative; z-index: 10; }
+    .sidebar-logo { padding: 28px 24px 20px; border-bottom: 1px solid var(--border); }
+    .logo-text { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--accent); letter-spacing: -0.5px; }
+    .logo-sub { font-size: 11px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 2px; }
+    .sidebar-nav { padding: 16px 12px; flex: 1; overflow-y: auto; }
+    .nav-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-dim); padding: 8px 12px 6px; font-weight: 500; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-sm); cursor: pointer; color: var(--text-muted); font-size: 14px; font-weight: 400; transition: all 0.15s; margin-bottom: 2px; border: 1px solid transparent; }
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active { background: var(--accent-glow); color: var(--accent); border-color: rgba(184,245,102,0.2); font-weight: 500; }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    .nav-count { margin-left: auto; background: var(--surface2); color: var(--text-muted); font-size: 11px; padding: 1px 7px; border-radius: 999px; min-width: 20px; text-align: center; }
+    .nav-item.active .nav-count { background: rgba(184,245,102,0.2); color: var(--accent); }
+    .sidebar-footer { padding: 16px 12px; border-top: 1px solid var(--border); }
+    .user-pill { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--surface2); }
+    .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; color: var(--bg); flex-shrink: 0; }
+    .user-info { flex: 1; min-width: 0; }
+    .user-name { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-email { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .logout-btn { background: none; border: none; color: #ffd166; cursor: pointer; font-size: 18px; padding: 4px; border-radius: 4px; transition: all 0.15s; }
+    .logout-btn:hover { color: #fff; transform: scale(1.15); }
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { padding: 20px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--surface); }
+    .page-title { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 700; color: var(--text); }
+    .topbar-actions { display: flex; gap: 10px; align-items: center; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid transparent; transition: all 0.15s; white-space: nowrap; }
+    .btn-primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+    .btn-primary:hover { background: var(--accent-dim); border-color: var(--accent-dim); }
+    .btn-ghost { background: transparent; color: var(--text-muted); border-color: var(--border); }
+    .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .content { flex: 1; overflow-y: auto; padding: 28px 32px; }
+
+    /* ── Two-column layout ── */
+    .dashboard-grid { display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; }
+
+    /* ── Calendar ── */
+    .calendar-widget { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+    .calendar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .calendar-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--text); }
+    .cal-nav-btn { background: none; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; width: 28px; height: 28px; border-radius: 6px; font-size: 14px; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+    .cal-nav-btn:hover { background: var(--surface2); color: var(--text); }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+    .cal-day-label { text-align: center; font-size: 10px; font-weight: 600; color: var(--text-dim); letter-spacing: 0.5px; text-transform: uppercase; padding: 4px 0 8px; }
+    .cal-day { position: relative; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--text-muted); border-radius: 8px; cursor: pointer; transition: all 0.15s; }
+    .cal-day:hover { background: var(--surface2); color: var(--text); }
+    .cal-day.other-month { color: var(--text-dim); opacity: 0.4; }
+    .cal-day.today { background: var(--accent-glow); color: var(--accent); font-weight: 700; border: 1px solid rgba(184,245,102,0.3); }
+    .cal-day.has-reminder::after { content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; border-radius: 50%; background: var(--accent); }
+    .cal-day.has-urgent::after { background: var(--urgent); }
+    .cal-day.selected { background: var(--accent); color: var(--bg); font-weight: 700; }
+    .cal-day.selected::after { background: var(--bg); }
+
+    /* ── Audio reminder panel ── */
+    .audio-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-top: 16px; }
+    .audio-panel-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+    .audio-panel-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+    .audio-text-area { width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 13px; font-family: 'DM Sans', sans-serif; outline: none; resize: vertical; min-height: 80px; transition: border-color 0.15s; margin-bottom: 10px; }
+    .audio-text-area:focus { border-color: var(--accent); }
+    .audio-text-area::placeholder { color: var(--text-dim); }
+    .audio-controls { display: flex; gap: 8px; align-items: center; }
+    .play-btn { background: var(--accent); color: var(--bg); border: none; border-radius: var(--radius-sm); padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
+    .play-btn:hover { background: var(--accent-dim); }
+    .play-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .voice-select { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 12px; font-family: 'DM Sans', sans-serif; outline: none; cursor: pointer; }
+    .audio-status { font-size: 11px; color: var(--text-muted); margin-top: 8px; min-height: 16px; }
+    .pwd-wrap { position: relative; }
+    .pwd-wrap input { padding-right: 40px !important; }
+    .eye-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 16px; color: #ffd166; padding: 0; line-height: 1; }
+    .eye-btn:hover { color: #fff; }
+    .format-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+    .format-card { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 8px; cursor: pointer; transition: all 0.15s; background: var(--surface2); text-align: center; }
+    .format-card:hover { border-color: var(--accent); }
+    .format-card.selected { border-color: var(--accent); background: var(--accent-glow); }
+    .format-card .f-icon { font-size: 20px; margin-bottom: 4px; }
+    .format-card .f-label { font-size: 12px; font-weight: 600; color: var(--text); }
+    .format-card .f-sub { font-size: 10px; color: var(--text-muted); }
+    .mood-selector { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; margin-bottom: 10px; }
+    .mood-card { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 4px; cursor: pointer; transition: all 0.15s; background: var(--surface2); text-align: center; }
+    .mood-card:hover { border-color: var(--accent); }
+    .mood-card.selected { border-color: var(--accent); background: var(--accent-glow); }
+    .mood-card .f-icon { font-size: 18px; margin-bottom: 2px; }
+    .mood-card .f-label { font-size: 11px; font-weight: 500; color: var(--text); }
+    .audio-msg-box { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; margin-top: 8px; }
+    .audio-msg-label { font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 6px; }
+    .audio-msg-tabs { display: flex; gap: 4px; margin-bottom: 8px; }
+    .audio-msg-tab { flex: 1; padding: 5px; text-align: center; font-size: 11px; font-weight: 500; cursor: pointer; border-radius: 6px; border: 1px solid var(--border); background: none; color: var(--text-muted); font-family: "DM Sans", sans-serif; transition: all 0.15s; }
+    .audio-msg-tab.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+    .audio-msg-preview { font-size: 12px; color: var(--text-muted); font-style: italic; line-height: 1.5; padding: 6px 0; }
+    .test-email-btn { width: 100%; margin-top: 10px; background: transparent; border: 1px dashed var(--accent); color: var(--accent); border-radius: var(--radius-sm); padding: 9px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: "DM Sans", sans-serif; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .test-email-btn:hover { background: var(--accent-glow); }
+    .server-status { margin-top: 12px; text-align: center; font-size: 12px; padding: 8px; border-radius: 8px; background: var(--surface2); }
+
+    /* ── Stats ── */
+    .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+    .stat-value { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; color: var(--accent); line-height: 1; margin-bottom: 4px; }
+    .stat-label { font-size: 12px; color: var(--text-muted); }
+
+    /* ── Filter bar ── */
+    .filter-bar { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+    .filter-chip { padding: 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); transition: all 0.15s; }
+    .filter-chip:hover { border-color: var(--accent); color: var(--accent); }
+    .filter-chip.active { background: var(--accent-glow); border-color: rgba(184,245,102,0.3); color: var(--accent); }
+    .search-box { margin-left: auto; position: relative; }
+    .search-box input { background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: var(--radius-sm); padding: 7px 12px 7px 34px; font-size: 13px; font-family: 'DM Sans', sans-serif; width: 200px; outline: none; transition: border-color 0.15s; }
+    .search-box input:focus { border-color: var(--accent); }
+    .search-box input::placeholder { color: var(--text-dim); }
+    .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-dim); font-size: 14px; pointer-events: none; }
+
+    /* ── Reminder cards ── */
+    .reminders-grid { display: flex; flex-direction: column; gap: 10px; }
+    .reminder-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; display: flex; align-items: flex-start; gap: 14px; transition: all 0.2s; animation: slideIn 0.2s ease; position: relative; overflow: hidden; }
+    .reminder-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--priority-color, var(--border)); border-radius: 3px 0 0 3px; }
+    .reminder-card:hover { border-color: #3a3e39; transform: translateX(2px); }
+    .reminder-card.completed { opacity: 0.5; }
+    .reminder-card.completed .reminder-title { text-decoration: line-through; }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+    .reminder-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border); cursor: pointer; flex-shrink: 0; margin-top: 2px; transition: all 0.15s; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+    .reminder-check:hover { border-color: var(--accent); background: var(--accent-glow); }
+    .reminder-card.completed .reminder-check { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+    .reminder-body { flex: 1; min-width: 0; }
+    .reminder-title { font-weight: 500; font-size: 15px; color: var(--text); margin-bottom: 4px; }
+    .reminder-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .reminder-meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+    .tag-priority-low { background: rgba(107,207,255,0.12); color: var(--low); }
+    .tag-priority-medium { background: rgba(184,245,102,0.12); color: var(--medium); }
+    .tag-priority-high { background: rgba(255,209,102,0.12); color: var(--high); }
+    .tag-priority-urgent { background: rgba(255,107,107,0.12); color: var(--urgent); }
+    .tag-date { background: var(--surface2); color: var(--text-muted); }
+    .tag-recur { background: var(--surface2); color: var(--text-muted); }
+    .tag-overdue { background: rgba(255,107,107,0.12); color: var(--danger); }
+    .reminder-actions { display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; }
+    .reminder-card:hover .reminder-actions { opacity: 1; }
+    .icon-btn { background: none; border: 1px solid transparent; color: var(--text-dim); cursor: pointer; padding: 6px; border-radius: var(--radius-sm); font-size: 14px; transition: all 0.15s; line-height: 1; }
+    .icon-btn:hover { background: var(--surface2); border-color: var(--border); color: var(--text); }
+    .icon-btn.delete:hover { color: var(--danger); border-color: rgba(255,107,107,0.3); background: rgba(255,107,107,0.08); }
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+    .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+    .empty-title { font-family: 'Syne', sans-serif; font-size: 20px; color: var(--text-dim); margin-bottom: 8px; }
+    .empty-sub { font-size: 14px; color: var(--text-dim); }
+
+    /* ── Modal ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.15s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; animation: scaleIn 0.2s ease; }
+    @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    .modal-header { padding: 24px 24px 0; display: flex; align-items: center; justify-content: space-between; }
+    .modal-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: var(--text); }
+    .modal-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 20px; padding: 4px; border-radius: 4px; transition: color 0.15s; line-height: 1; }
+    .modal-close:hover { color: var(--text); }
+    .modal-body { padding: 20px 24px 24px; }
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 12px; font-weight: 500; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 6px; }
+    .form-control { width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 14px; font-family: 'DM Sans', sans-serif; outline: none; transition: border-color 0.15s; }
+    .form-control:focus { border-color: var(--accent); }
+    .form-control::placeholder { color: var(--text-dim); }
+    textarea.form-control { resize: vertical; min-height: 80px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-toggle { display: flex; align-items: center; gap: 10px; padding: 12px; background: var(--surface2); border-radius: var(--radius-sm); border: 1px solid var(--border); cursor: pointer; }
+    .toggle-switch { width: 36px; height: 20px; background: var(--border); border-radius: 999px; position: relative; transition: background 0.2s; flex-shrink: 0; }
+    .toggle-switch::after { content: ''; position: absolute; width: 14px; height: 14px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.2s; }
+    .toggle-switch.on { background: var(--accent); }
+    .toggle-switch.on::after { transform: translateX(16px); }
+    .toggle-label { font-size: 13px; color: var(--text); }
+    .toggle-sub { font-size: 11px; color: var(--text-muted); }
+    .modal-footer { padding: 0 24px 24px; display: flex; gap: 10px; justify-content: flex-end; }
+
+    /* ── Auth ── */
+    .auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); padding: 20px; position: relative; overflow: hidden; }
+    .auth-bg { position: absolute; inset: 0; background: radial-gradient(ellipse at 20% 50%, rgba(184,245,102,0.04) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(184,245,102,0.03) 0%, transparent 50%); pointer-events: none; }
+    .auth-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 40px; width: 100%; max-width: 420px; position: relative; z-index: 1; animation: scaleIn 0.3s ease; }
+    .auth-logo { text-align: center; margin-bottom: 32px; }
+    .auth-logo-text { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; color: var(--accent); letter-spacing: -1px; }
+    .auth-logo-sub { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+    .auth-tabs { display: flex; background: var(--surface2); border-radius: var(--radius-sm); padding: 4px; margin-bottom: 24px; }
+    .auth-tab { flex: 1; padding: 8px; text-align: center; font-size: 13px; font-weight: 500; cursor: pointer; border-radius: 6px; color: var(--text-muted); transition: all 0.15s; border: none; background: none; font-family: 'DM Sans', sans-serif; }
+    .auth-tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+    .auth-footer { margin-top: 16px; text-align: center; font-size: 12px; color: var(--text-dim); }
+
+    /* ── Toast ── */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+    .toast { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; font-size: 13px; color: var(--text); display: flex; align-items: center; gap: 8px; min-width: 260px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); animation: slideUp 0.2s ease; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .toast.success { border-color: rgba(184,245,102,0.3); }
+    .toast.error { border-color: rgba(255,107,107,0.3); }
+
+    .loading { display: flex; align-items: center; justify-content: center; padding: 60px; color: var(--text-muted); gap: 10px; }
+    .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hidden { display: none !important; }
+
+    .admin-user-row{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--border);}
+    .admin-user-row:last-child{border-bottom:none;}
+    .admin-user-info{display:flex;flex-direction:column;gap:2px;}
+    .admin-user-email{font-size:14px;color:var(--text);font-weight:500;}
+    .admin-user-meta{font-size:11px;color:var(--text-muted);}
+    .admin-actions{display:flex;gap:6px;}
+    .admin-btn{padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;border:1px solid;font-weight:500;}
+    .admin-btn-block{background:rgba(255,209,102,0.1);color:#ffd166;border-color:rgba(255,209,102,0.3);}
+    .admin-btn-delete{background:rgba(255,107,107,0.1);color:#ff6b6b;border-color:rgba(255,107,107,0.3);}
+
+
+    .admin-user-row { display:flex; align-items:center; justify-content:space-between; padding:12px 20px; border-bottom:1px solid var(--border); }
+    .admin-user-row:last-child { border-bottom:none; }
+    .admin-user-info { display:flex; flex-direction:column; gap:2px; }
+    .admin-user-email { font-size:14px; color:var(--text); font-weight:500; }
+    .admin-user-meta { font-size:11px; color:var(--text-muted); }
+    .admin-actions { display:flex; gap:6px; }
+    .admin-btn { padding:5px 12px; border-radius:6px; font-size:12px; cursor:pointer; border:1px solid; font-family:"DM Sans",sans-serif; font-weight:500; transition:all 0.15s; }
+    .admin-btn-block { background:rgba(255,209,102,0.1); color:var(--warning); border-color:rgba(255,209,102,0.3); }
+    .admin-btn-block:hover { background:rgba(255,209,102,0.2); }
+    .admin-btn-delete { background:rgba(255,107,107,0.1); color:var(--danger); border-color:rgba(255,107,107,0.3); }
+    .admin-btn-delete:hover { background:rgba(255,107,107,0.2); }
+
+
+    .admin-user-row { display:flex; align-items:center; justify-content:space-between; padding:12px 20px; border-bottom:1px solid var(--border); }
+    .admin-user-row:last-child { border-bottom:none; }
+    .admin-user-info { display:flex; flex-direction:column; gap:2px; }
+    .admin-user-email { font-size:14px; color:var(--text); font-weight:500; }
+    .admin-user-meta { font-size:11px; color:var(--text-muted); }
+    .admin-actions { display:flex; gap:6px; }
+    .admin-btn { padding:5px 12px; border-radius:6px; font-size:12px; cursor:pointer; border:1px solid; font-family:"DM Sans",sans-serif; font-weight:500; transition:all 0.15s; }
+    .admin-btn-block { background:rgba(255,209,102,0.1); color:var(--warning); border-color:rgba(255,209,102,0.3); }
+    .admin-btn-block:hover { background:rgba(255,209,102,0.2); }
+    .admin-btn-delete { background:rgba(255,107,107,0.1); color:var(--danger); border-color:rgba(255,107,107,0.3); }
+    .admin-btn-delete:hover { background:rgba(255,107,107,0.2); }
+    .admin-badge-blocked { background:rgba(255,107,107,0.1); color:var(--danger); border:1px solid rgba(255,107,107,0.3); padding:2px 8px; border-radius:999px; font-size:10px; font-weight:600; }
+
+  </style>
+</head>
+<body>
+
+<!-- Auth Screen -->
+<div id="authScreen" class="auth-screen">
+  <div class="auth-bg"></div>
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-text">RemindMe</div>
+      <div class="auth-logo-sub">Your intelligent reminder system</div>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:6px;letter-spacing:1px;">PC-V1.01</div>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
+      <button class="auth-tab" onclick="switchAuthTab('register')">Create Account</button>
+    </div>
+    <div id="loginForm">
+      <div class="form-group"><label class="form-label">Email</label><input class="form-control" type="email" id="loginEmail" placeholder="you@example.com"></div>
+      <div class="form-group"><label class="form-label">Password</label><div class="pwd-wrap"><input class="form-control" type="text" id="loginPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()"></div></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;" onclick="login()">Sign In →</button>
+    </div>
+    <div id="registerForm" class="hidden">
+      <div class="form-group"><label class="form-label">Name</label><input class="form-control" type="text" id="regName" placeholder="Your name"></div>
+      <div class="form-group"><label class="form-label">Email</label><input class="form-control" type="email" id="regEmail" placeholder="you@example.com"></div>
+      <div class="form-group"><label class="form-label">Password</label><div class="pwd-wrap"><input class="form-control" type="text" id="regPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')register()"></div></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;" onclick="register()">Create Account →</button>
+    </div>
+    <div class="auth-footer">Your data is stored on your PC</div>
+    <div class="server-status" id="serverStatus">⏳ Checking server connection...</div>
+  </div>
+</div>
+
+<!-- Main App -->
+<div id="appScreen" class="app hidden">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-text">RemindMe</div>
+      <div class="logo-sub">Dashboard</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">Views</div>
+      <div class="nav-item active" onclick="setView('all')" id="nav-all"><span class="nav-icon">📋</span> All Reminders<span class="nav-count" id="count-all">0</span></div>
+      <div class="nav-item" onclick="setView('upcoming')" id="nav-upcoming"><span class="nav-icon">📅</span> Upcoming<span class="nav-count" id="count-upcoming">0</span></div>
+      <div class="nav-item" onclick="setView('today')" id="nav-today"><span class="nav-icon">⚡</span> Today<span class="nav-count" id="count-today">0</span></div>
+      <div class="nav-item" onclick="setView('completed')" id="nav-completed"><span class="nav-icon">✅</span> Completed<span class="nav-count" id="count-completed">0</span></div>
+      <div class="nav-label" style="margin-top:12px;">Admin</div>
+      <div class="nav-item" onclick="setView('admin')" id="nav-admin"><span class="nav-icon">🛡️</span> Admin Panel</div>
+      <div class="nav-label" style="margin-top:12px;">Admin</div>
+      <div class="nav-item" onclick="setView('admin')" id="nav-admin"><span class="nav-icon">🛡️</span> Admin Panel</div>
+      <div class="nav-label" style="margin-top:12px;">Admin</div>
+      <div class="nav-item" onclick="setView('admin')" id="nav-admin"><span class="nav-icon">&#x1F6E1;</span> Admin Panel</div>
+      <div class="nav-label" style="margin-top:12px;">Priority</div>
+      <div class="nav-item" onclick="setView('urgent')" id="nav-urgent"><span class="nav-icon">🔴</span> Urgent<span class="nav-count" id="count-urgent">0</span></div>
+      <div class="nav-item" onclick="setView('high')" id="nav-high"><span class="nav-icon">🟠</span> High<span class="nav-count" id="count-high">0</span></div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <div class="user-info">
+          <div class="user-name" id="userName">Loading...</div>
+          <div class="user-email" id="userEmail"></div>
+        </div>
+        <button class="logout-btn" onclick="logout()" title="Logout">⏻</button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="page-title" id="pageTitle">All Reminders</div>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost btn-sm" onclick="loadReminders()">↻ Refresh</button>
+        <button class="btn btn-primary" onclick="openCreateModal()">+ New Reminder</button>
+      </div>
+    </div>
+    <div id="adminPanel" class="hidden" style="padding:28px 32px;flex:1;overflow-y:auto;">
+      <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:20px;">Admin Panel</div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:14px;font-weight:500;color:var(--text);">All Users</span>
+          <button onclick="loadAdminUsers()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;">Refresh</button>
+        </div>
+        <div id="adminUserList" style="min-height:100px;"></div>
+      </div>
+    </div>
+    <div class="content" id="mainContent">
+      <!-- Stats -->
+      <div class="stats-bar">
+        <div class="stat-card"><div class="stat-value" id="stat-total">0</div><div class="stat-label">Total</div></div>
+        <div class="stat-card"><div class="stat-value" id="stat-pending">0</div><div class="stat-label">Pending</div></div>
+        <div class="stat-card"><div class="stat-value" id="stat-today">0</div><div class="stat-label">Due Today</div></div>
+        <div class="stat-card"><div class="stat-value" id="stat-overdue">0</div><div class="stat-label">Overdue</div></div>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <div class="filter-chip active" onclick="setFilter('all')" id="filter-all">All</div>
+        <div class="filter-chip" onclick="setFilter('low')" id="filter-low">🟢 Low</div>
+        <div class="filter-chip" onclick="setFilter('medium')" id="filter-medium">🟡 Medium</div>
+        <div class="filter-chip" onclick="setFilter('high')" id="filter-high">🟠 High</div>
+        <div class="filter-chip" onclick="setFilter('urgent')" id="filter-urgent">🔴 Urgent</div>
+        <div class="search-box"><span class="search-icon">🔍</span><input type="text" placeholder="Search reminders..." oninput="filterReminders()" id="searchInput"></div>
+      </div>
+
+      <!-- Two-column: reminders + sidebar widgets -->
+      <div class="dashboard-grid">
+        <!-- Left: reminders list -->
+        <div>
+          <div id="loadingState" class="loading"><div class="spinner"></div> Loading reminders...</div>
+          <div id="remindersList" class="reminders-grid hidden"></div>
+          <div id="emptyState" class="empty-state hidden">
+            <div class="empty-icon">🔔</div>
+            <div class="empty-title">No reminders here</div>
+            <div class="empty-sub">Create your first reminder to get started</div>
+          </div>
+        </div>
+
+        <!-- Right: calendar + audio panel -->
+        <div>
+          <!-- Calendar -->
+          <div class="calendar-widget">
+            <div class="calendar-header">
+              <button class="cal-nav-btn" onclick="calPrev()">‹</button>
+              <div class="calendar-title" id="calTitle"></div>
+              <button class="cal-nav-btn" onclick="calNext()">›</button>
+            </div>
+            <div class="calendar-grid" id="calGrid"></div>
+          </div>
+
+
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Create/Edit Modal -->
+<div id="reminderModal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">New Reminder</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId">
+      <div class="form-group"><label class="form-label">Title *</label><input class="form-control" type="text" id="fTitle" placeholder="What do you need to remember?" oninput="updateAutoPreview()"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Due Date & Time</label><input class="form-control" type="datetime-local" id="fDue"></div>
+        <div class="form-group"><label class="form-label">Priority</label>
+          <select class="form-control" id="fPriority">
+            <option value="low">🟢 Low</option>
+            <option value="medium" selected>🟡 Medium</option>
+            <option value="high">🟠 High</option>
+            <option value="urgent">🔴 Urgent</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Recurrence</label>
+          <select class="form-control" id="fRecurrence">
+            <option value="none">No repeat</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Notify before (mins)</label><input class="form-control" type="number" id="fNotifyMins" value="30" min="1"></div>
+      </div>
+      <!-- Description (mandatory) -->
+      <div class="form-group">
+        <label class="form-label">Description <span style="color:var(--danger)">*</span></label>
+        <textarea class="form-control" id="fDesc" placeholder="Describe your reminder — this becomes your audio message..." style="min-height:70px;" oninput="updateAutoPreview()"></textarea>
+      </div>
+
+      <!-- Reminder Format -->
+      <div class="form-group">
+        <label class="form-label">Reminder Format</label>
+        <div class="format-selector">
+          <div class="format-card selected" onclick="selectFormat('email')" id="fmt-email"><div class="f-icon">📧</div><div class="f-label">Email</div><div class="f-sub">Standard email</div></div>
+          <div class="format-card" onclick="selectFormat('text')" id="fmt-text"><div class="f-icon">💬</div><div class="f-label">Text Only</div><div class="f-sub">Plain message</div></div>
+          <div class="format-card" onclick="selectFormat('audio')" id="fmt-audio"><div class="f-icon">🔊</div><div class="f-label">Audio</div><div class="f-sub">Voice reminder</div></div>
+          <div class="format-card" onclick="selectFormat('funny')" id="fmt-funny"><div class="f-icon">😂</div><div class="f-label">Funny Audio</div><div class="f-sub">Pick a mood!</div></div>
+        </div>
+
+        <!-- Mood picker (funny only) -->
+        <div class="mood-selector hidden" id="moodSelector">
+          <div class="mood-card selected" onclick="selectMood('nice')" id="mood-nice"><div class="f-icon">😊</div><div class="f-label">Nice</div></div>
+          <div class="mood-card" onclick="selectMood('mean')" id="mood-mean"><div class="f-icon">😈</div><div class="f-label">Mean</div></div>
+          <div class="mood-card" onclick="selectMood('angry')" id="mood-angry"><div class="f-icon">😡</div><div class="f-label">Angry</div></div>
+        </div>
+
+        <!-- Audio/Funny message box -->
+        <div class="audio-msg-box hidden" id="audioMsgBox">
+          <div class="audio-msg-label" id="audioMsgLabel">Message</div>
+          <div class="audio-msg-tabs">
+            <button class="audio-msg-tab active" onclick="setMsgMode('auto')" id="tab-auto">⚡ Auto (use description)</button>
+            <button class="audio-msg-tab" onclick="setMsgMode('manual')" id="tab-manual">✏️ Custom message</button>
+          </div>
+          <div id="autoMsgPreview" class="audio-msg-preview"></div>
+          <textarea class="form-control hidden" id="customAudioMsg" placeholder="Type your custom audio message here..." style="min-height:60px;margin-top:4px;"></textarea>
+          <button class="play-btn" style="margin-top:8px;font-size:12px;padding:6px 14px;" onclick="previewAudio()">▶ Preview Audio</button>
+        </div>
+
+        <!-- Test email -->
+        <button class="test-email-btn hidden" id="testEmailBtn" onclick="sendTestEmail()">📧 Send Test Email to My Address</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveReminder()">Save Reminder</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+  const API = '';
+  let token = localStorage.getItem('token');
+  let currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+  let allReminders = [];
+  let currentView = 'all';
+  let currentFilter = 'all';
+  let emailNotify = false;
+  let editingId = null;
+
+  // ── Calendar state ────────────────────────────────────────────────────────
+  let calDate = new Date();
+  let selectedCalDay = null;
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  function init() {
+    if (token && currentUser) { showApp(); }
+    else { showAuth(); }
+    loadVoices();
+  }
+
+  function showAuth() {
+    setTimeout(loadSavedCredentials, 50);
+    document.getElementById('authScreen').classList.remove('hidden');
+    document.getElementById('appScreen').classList.add('hidden');
+    checkServer();
+  }
+
+  function showApp() {
+    document.getElementById('authScreen').classList.add('hidden');
+    document.getElementById('appScreen').classList.remove('hidden');
+    document.getElementById('userName').textContent = currentUser.name || currentUser.email;
+    document.getElementById('userEmail').textContent = currentUser.email;
+    document.getElementById('userAvatar').textContent = (currentUser.name || currentUser.email)[0].toUpperCase();
+    loadReminders();
+    renderCalendar();
+  }
+
+  // ── Auth ──────────────────────────────────────────────────────────────────
+  function switchAuthTab(tab) {
+    document.querySelectorAll('.auth-tab').forEach((t, i) => {
+      t.classList.toggle('active', (tab === 'login' && i === 0) || (tab === 'register' && i === 1));
+    });
+    document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
+    document.getElementById('registerForm').classList.toggle('hidden', tab !== 'register');
+  }
+
+  async function login() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    if (!email || !password) return toast('Please fill in all fields', 'error');
+    try {
+      const res = await fetch(`${API}/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      token = data.token; currentUser = data.user;
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(currentUser));
+      toast('Welcome back!', 'success'); showApp();
+    } catch (err) { toast(err.message || 'Login failed', 'error'); }
+  }
+
+  async function register() {
+    const name = document.getElementById('regName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const password = document.getElementById('regPassword').value;
+    if (!email || !password) return toast('Please fill in all fields', 'error');
+    try {
+      const res = await fetch(`${API}/auth/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, password }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      token = data.token; currentUser = data.user;
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(currentUser));
+      toast('Account created!', 'success'); showApp();
+    } catch (err) { toast(err.message || 'Registration failed', 'error'); }
+  }
+
+  function logout() {
+    token = null; currentUser = null;
+    localStorage.removeItem('token'); localStorage.removeItem('user');
+    showAuth();
+  }
+
+  // ── API ───────────────────────────────────────────────────────────────────) {
+    const res = await fetch(`${API}${path}`, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...(options.headers || {}) } });
+    if (res.status === 401 || res.status === 403) { logout(); return; }
+    return res;
+  }
+
+  // ── Load reminders ────────────────────────────────────────────────────────
+  async function loadReminders() {
+    document.getElementById('loadingState').classList.remove('hidden');
+    document.getElementById('remindersList').classList.add('hidden');
+    document.getElementById('emptyState').classList.add('hidden');
+    try {
+      const res = await apiFetch('/reminders');
+      allReminders = await res.json();
+      updateCounts(); renderReminders(); renderCalendar();
+    } catch (err) { toast('Failed to load reminders', 'error'); }
+  }
+
+  function updateCounts() {
+    const now = new Date();
+    const todayEnd = new Date(); todayEnd.setHours(23,59,59,999);
+    const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+    const pending = allReminders.filter(r => !r.completed);
+    const todayItems = pending.filter(r => r.due_at && new Date(r.due_at) >= todayStart && new Date(r.due_at) <= todayEnd);
+    const overdue = pending.filter(r => r.due_at && new Date(r.due_at) < now);
+    const upcoming = pending.filter(r => r.due_at && new Date(r.due_at) >= now);
+    const completed = allReminders.filter(r => r.completed);
+    document.getElementById('stat-total').textContent = allReminders.length;
+    document.getElementById('stat-pending').textContent = pending.length;
+    document.getElementById('stat-today').textContent = todayItems.length;
+    document.getElementById('stat-overdue').textContent = overdue.length;
+    document.getElementById('count-all').textContent = allReminders.length;
+    document.getElementById('count-upcoming').textContent = upcoming.length;
+    document.getElementById('count-today').textContent = todayItems.length;
+    document.getElementById('count-completed').textContent = completed.length;
+    document.getElementById('count-urgent').textContent = pending.filter(r => r.priority === 'urgent').length;
+    document.getElementById('count-high').textContent = pending.filter(r => r.priority === 'high').length;
+  }
+
+  function getViewReminders() {
+    const now = new Date();
+    const todayEnd = new Date(); todayEnd.setHours(23,59,59,999);
+    const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+    const weekEnd = new Date(); weekEnd.setDate(weekEnd.getDate() + 7);
+    switch(currentView) {
+      case 'upcoming': return allReminders.filter(r => !r.completed && r.due_at && new Date(r.due_at) >= now && new Date(r.due_at) <= weekEnd);
+      case 'today': return allReminders.filter(r => !r.completed && r.due_at && new Date(r.due_at) >= todayStart && new Date(r.due_at) <= todayEnd);
+      case 'completed': return allReminders.filter(r => r.completed);
+      case 'urgent': return allReminders.filter(r => !r.completed && r.priority === 'urgent');
+      case 'high': return allReminders.filter(r => !r.completed && r.priority === 'high');
+      default: return allReminders;
+    }
+  }
+
+  function renderReminders() {
+    let reminders = getViewReminders();
+    if (selectedCalDay) {
+      reminders = reminders.filter(r => {
+        if (!r.due_at) return false;
+        const d = new Date(r.due_at);
+        return d.getFullYear() === selectedCalDay.getFullYear() && d.getMonth() === selectedCalDay.getMonth() && d.getDate() === selectedCalDay.getDate();
+      });
+    }
+    if (currentFilter !== 'all') reminders = reminders.filter(r => r.priority === currentFilter);
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    if (search) reminders = reminders.filter(r => r.title.toLowerCase().includes(search) || (r.description || '').toLowerCase().includes(search));
+    document.getElementById('loadingState').classList.add('hidden');
+    if (reminders.length === 0) {
+      document.getElementById('remindersList').classList.add('hidden');
+      document.getElementById('emptyState').classList.remove('hidden');
+      return;
+    }
+    document.getElementById('emptyState').classList.add('hidden');
+    document.getElementById('remindersList').classList.remove('hidden');
+    const priorityColors = { low: 'var(--low)', medium: 'var(--medium)', high: 'var(--high)', urgent: 'var(--urgent)' };
+    const recurrenceIcons = { daily: '🔁', weekly: '📆', monthly: '🗓️', yearly: '📅' };
+    document.getElementById('remindersList').innerHTML = reminders.map(r => {
+      const now = new Date();
+      const due = r.due_at ? new Date(r.due_at) : null;
+      const isOverdue = due && due < now && !r.completed;
+      return `
+        <div class="reminder-card ${r.completed ? 'completed' : ''}" style="--priority-color: ${priorityColors[r.priority] || 'var(--border)'}">
+          <div class="reminder-check" onclick="(playCompletionSound(), toggleComplete(${r.id}, ${r.completed}))">${r.completed ? '✓' : ''}</div>
+          <div class="reminder-body">
+            <div class="reminder-title">${escHtml(r.title)}</div>
+            ${r.description ? `<div class="reminder-desc">${escHtml(r.description)}</div>` : ''}
+            <div class="reminder-meta">
+              <span class="tag tag-priority-${r.priority}">${r.priority}</span>
+              ${due ? `<span class="tag ${isOverdue ? 'tag-overdue' : 'tag-date'}">⏰ ${formatDate(due)}${isOverdue ? ' · overdue' : ''}</span>` : ''}
+              ${r.recurrence !== 'none' ? `<span class="tag tag-recur">${recurrenceIcons[r.recurrence]} ${r.recurrence}</span>` : ''}
+              ${r.notify_email ? `<span class="tag tag-date">📧 🔊</span>` : ''}
+            </div>
+          </div>
+          <div class="reminder-actions">
+            <button class="icon-btn" onclick="openEditModal(${r.id})" title="Edit">✏️</button>
+            <button class="icon-btn delete" onclick="deleteReminder(${r.id})" title="Delete">🗑️</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function filterReminders() { renderReminders(); }
+  function setFilter(f) {
+    currentFilter = f;
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    document.getElementById(`filter-${f}`).classList.add('active');
+    renderReminders();
+  }
+  function setView(v) {
+    currentView = v; selectedCalDay = null;
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const _ap = document.getElementById('adminPanel');
+    const _mc = document.getElementById('mainContent');
+    if (view === 'admin') {
+      if (_ap) _ap.classList.remove('hidden');
+      if (_mc) _mc.classList.add('hidden');
+      const _na = document.getElementById('nav-admin');
+      if (_na) _na.classList.add('active');
+      loadAdminUsers(); return;
+    } else {
+      if (_ap) _ap.classList.add('hidden');
+      if (_mc) _mc.classList.remove('hidden');
+    }
+    const adminPanel = document.getElementById('adminPanel');
+    const mainContent = document.getElementById('mainContent');
+    if (view === 'admin') {
+      if (adminPanel) adminPanel.classList.remove('hidden');
+      if (mainContent) mainContent.classList.add('hidden');
+      const navAdmin = document.getElementById('nav-admin');
+      if (navAdmin) navAdmin.classList.add('active');
+      loadAdminUsers();
+      return;
+    } else {
+      if (adminPanel) adminPanel.classList.add('hidden');
+      if (mainContent) mainContent.classList.remove('hidden');
+    }
+    const _ap2 = document.getElementById('adminPanel');
+    const _mc2 = document.getElementById('mainContent');
+    if (view === 'admin') {
+      if (adminPanel) { adminPanel.classList.remove('hidden'); }
+      if (mainContent) { mainContent.classList.add('hidden'); }
+      document.getElementById('nav-admin') && document.getElementById('nav-admin').classList.add('active');
+      loadAdminUsers();
+      return;
+    } else {
+      if (adminPanel) { adminPanel.classList.add('hidden'); }
+      if (mainContent) { mainContent.classList.remove('hidden'); }
+    }
+    document.getElementById(`nav-${v}`).classList.add('active');
+    const titles = { all: 'All Reminders', upcoming: 'Upcoming', today: 'Today', completed: 'Completed', urgent: 'Urgent', high: 'High Priority' };
+    document.getElementById('pageTitle').textContent = titles[v] || 'Reminders';
+    renderCalendar(); renderReminders();
+  }
+
+  // ── Calendar ──────────────────────────────────────────────────────────────
+  function renderCalendar() {
+    const year = calDate.getFullYear();
+    const month = calDate.getMonth();
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    document.getElementById('calTitle').textContent = `${months[month]} ${year}`;
+
+    const grid = document.getElementById('calGrid');
+    const days = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+    let html = days.map(d => `<div class="cal-day-label">${d}</div>`).join('');
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysInPrev = new Date(year, month, 0).getDate();
+    const today = new Date();
+
+    // Prev month days
+    for (let i = firstDay - 1; i >= 0; i--) {
+      html += `<div class="cal-day other-month">${daysInPrev - i}</div>`;
+    }
+
+    // Current month days
+    for (let d = 1; d <= daysInMonth; d++) {
+      const thisDate = new Date(year, month, d);
+      const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === d;
+      const isSelected = selectedCalDay && selectedCalDay.getFullYear() === year && selectedCalDay.getMonth() === month && selectedCalDay.getDate() === d;
+
+      // Check if any reminders on this day
+      const dayReminders = allReminders.filter(r => {
+        if (!r.due_at || r.completed) return false;
+        const rd = new Date(r.due_at);
+        return rd.getFullYear() === year && rd.getMonth() === month && rd.getDate() === d;
+      });
+      const hasUrgent = dayReminders.some(r => r.priority === 'urgent');
+      const hasReminder = dayReminders.length > 0;
+
+      let cls = 'cal-day';
+      if (isToday) cls += ' today';
+      if (isSelected) cls += ' selected';
+      if (hasUrgent) cls += ' has-urgent';
+      else if (hasReminder) cls += ' has-reminder';
+
+      html += `<div class="${cls}" onclick="selectCalDay(${year}, ${month}, ${d})" title="${dayReminders.length ? dayReminders.length + ' reminder(s)' : ''}">${d}</div>`;
+    }
+
+    // Next month days
+    const total = firstDay + daysInMonth;
+    const remaining = total % 7 === 0 ? 0 : 7 - (total % 7);
+    for (let i = 1; i <= remaining; i++) {
+      html += `<div class="cal-day other-month">${i}</div>`;
+    }
+
+    grid.innerHTML = html;
+  }
+
+  function selectCalDay(year, month, day) {
+    const clicked = new Date(year, month, day);
+    if (selectedCalDay && selectedCalDay.getTime() === clicked.getTime()) {
+      selectedCalDay = null;
+      document.getElementById('pageTitle').textContent = 'All Reminders';
+    } else {
+      selectedCalDay = clicked;
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      document.getElementById('pageTitle').textContent = `Reminders — ${months[month]} ${day}`;
+    }
+    renderCalendar();
+    renderReminders();
+  }
+
+  function calPrev() { calDate.setMonth(calDate.getMonth() - 1); renderCalendar(); }
+  function calNext() { calDate.setMonth(calDate.getMonth() + 1); renderCalendar(); }
+
+  // ── Audio TTS ─────────────────────────────────────────────────────────────
+
+  function playAudio() {
+    const text = document.getElementById('audioText').value.trim();
+    if (!text) { toast('Please type a message first', 'error'); return; }
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    const voiceIdx = parseInt(document.getElementById('voiceSelect').value) || 0;
+    if (voices[voiceIdx]) utter.voice = voices[voiceIdx];
+    utter.rate = 0.95;
+    utter.pitch = 1;
+    const btn = document.getElementById('playBtn');
+    const status = document.getElementById('audioStatus');
+    btn.disabled = true;
+    btn.textContent = '⏸ Playing...';
+    status.textContent = '🎵 Speaking your reminder...';
+    utter.onend = () => {
+      btn.disabled = false;
+      btn.textContent = '▶ Play';
+      status.textContent = '✓ Done playing';
+      setTimeout(() => status.textContent = '', 2000);
+    };
+    utter.onerror = () => {
+      btn.disabled = false;
+      btn.textContent = '▶ Play';
+      status.textContent = '❌ Playback failed';
+    };
+    window.speechSynthesis.speak(utter);
+  }
+
+  // ── Reminders CRUD ────────────────────────────────────────────────────────
+  async function toggleComplete(id, completed) {
+    playCompletionSound();
+    try {
+      await apiFetch(`/reminders/${id}`, { method: 'PATCH', body: JSON.stringify({ completed: !completed }) });
+      await loadReminders();
+      toast(!completed ? 'Reminder completed! 🎉' : 'Marked as pending', 'success');
+    } catch (err) { toast('Failed to update', 'error'); }
+  }
+
+  async function deleteReminder(id) {
+    if (!confirm('Delete this reminder?')) return;
+    try {
+      await apiFetch(`/reminders/${id}`, { method: 'DELETE' });
+      allReminders = allReminders.filter(r => r.id !== id);
+      updateCounts(); renderReminders(); renderCalendar();
+      toast('Reminder deleted', 'success');
+    } catch (err) { toast('Failed to delete', 'error'); }
+  }
+
+  function openCreateModal() {
+    editingId = null;
+    document.getElementById('modalTitle').textContent = 'New Reminder';
+    document.getElementById('fTitle').value = '';
+    document.getElementById('fDesc').value = '';
+    document.getElementById('fDue').value = '';
+    document.getElementById('fPriority').value = 'medium';
+    document.getElementById('fRecurrence').value = 'none';
+    document.getElementById('fNotifyMins').value = '30';
+    emailNotify = true;
+    reminderFormat = 'email'; funnyMood = 'nice'; msgMode = 'auto';
+    document.querySelectorAll('.format-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById('fmt-email').classList.add('selected');
+    document.getElementById('moodSelector').classList.add('hidden');
+    document.getElementById('audioMsgBox').classList.add('hidden');
+    document.getElementById('testEmailBtn').classList.remove('hidden');
+    document.getElementById('tab-auto').classList.add('active');
+    document.getElementById('tab-manual').classList.remove('active');
+    document.getElementById('autoMsgPreview').classList.remove('hidden');
+    document.getElementById('customAudioMsg').classList.add('hidden');
+    document.getElementById('reminderModal').classList.remove('hidden');
+    setTimeout(() => document.getElementById('fTitle').focus(), 100);
+  }
+
+  function openEditModal(id) {
+    const r = allReminders.find(x => x.id === id);
+    if (!r) return;
+    editingId = id;
+    document.getElementById('modalTitle').textContent = 'Edit Reminder';
+    document.getElementById('fTitle').value = r.title;
+    document.getElementById('fDesc').value = r.description || '';
+    document.getElementById('fDue').value = r.due_at ? r.due_at.slice(0,16) : '';
+    document.getElementById('fPriority').value = r.priority;
+    document.getElementById('fRecurrence').value = r.recurrence;
+    document.getElementById('fNotifyMins').value = r.notify_minutes_before;
+    emailNotify = r.notify_email;
+    reminderFormat = 'email'; funnyMood = 'nice'; msgMode = 'auto';
+    document.querySelectorAll('.format-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById('fmt-email').classList.add('selected');
+    document.getElementById('moodSelector').classList.add('hidden');
+    document.getElementById('audioMsgBox').classList.add('hidden');
+    document.getElementById('testEmailBtn').classList.remove('hidden');
+    document.getElementById('tab-auto').classList.add('active');
+    document.getElementById('tab-manual').classList.remove('active');
+    document.getElementById('autoMsgPreview').classList.remove('hidden');
+    document.getElementById('customAudioMsg').classList.add('hidden');
+    document.getElementById('reminderModal').classList.remove('hidden');
+  }
+
+  function closeModal() { document.getElementById('reminderModal').classList.add('hidden'); }
+  function toggleEmailNotify() {
+    emailNotify = !emailNotify;
+    document.getElementById('emailToggle').className = 'toggle-switch' + (emailNotify ? ' on' : '');
+  }
+
+  async function saveReminder() {
+    const title = document.getElementById('fTitle').value.trim();
+    if (!title) return toast('Title is required', 'error');
+    const desc = document.getElementById('fDesc').value.trim();
+    if (!desc) return toast('Description is required', 'error');
+    const due = document.getElementById('fDue').value;
+    const body = { title, description: desc, due_at: due ? new Date(due).toISOString() : undefined, priority: document.getElementById('fPriority').value, recurrence: document.getElementById('fRecurrence').value, notify_email: emailNotify, notify_minutes_before: parseInt(document.getElementById('fNotifyMins').value) || 30 };
+    try {
+      if (editingId) { await apiFetch(`/reminders/${editingId}`, { method: 'PATCH', body: JSON.stringify(body) }); toast('Reminder updated!', 'success'); }
+      else { await apiFetch('/reminders', { method: 'POST', body: JSON.stringify(body) }); toast('Reminder created!', 'success'); }
+      closeModal(); loadReminders();
+    } catch (err) { toast('Failed to save reminder', 'error'); }
+  }
+
+  document.getElementById('reminderModal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+
+  function formatDate(date) {
+    const now = new Date();
+    const days = Math.floor((date - now) / 86400000);
+    if (days === 0) return `Today ${date.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
+    if (days === 1) return `Tomorrow ${date.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
+    if (days === -1) return 'Yesterday';
+    if (days > 0 && days < 7) return date.toLocaleDateString([], {weekday:'short', hour:'2-digit', minute:'2-digit'});
+    return date.toLocaleDateString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+  }
+
+  function escHtml(str) { return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  function toast(msg, type = 'success') {
+    const icons = { success: '✅', error: '❌' };
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    el.innerHTML = `<span>${icons[type]}</span> ${msg}`;
+    document.getElementById('toastContainer').appendChild(el);
+    setTimeout(() => el.remove(), 3500);
+  }
+
+
+  // ── Format state ──────────────────────────────────────────────────────────
+  let reminderFormat = 'email';
+  let funnyMood = 'nice';
+  let msgMode = 'auto'; // 'auto' or 'manual'
+
+  const FUNNY_SCRIPTS = {
+    nice:  (t, d) => `Hey superstar! Just a super gentle nudge — ${d || t} is coming up! You are absolutely amazing and you totally got this! Go get them champ!`,
+    mean:  (t, d) => `Oh wow. ${d || t}. Still. Not. Done. I am honestly shocked. Did you forget? Of course you did. Classic. Maybe try actually doing it this time?`,
+    angry: (t, d) => `LISTEN UP! ${d || t}! RIGHT NOW! How many times do I have to tell you?! GET UP! DO IT! NO MORE EXCUSES! DO IT NOW!!!`,
+  };
+
+  function loadVoices() {
+    const populate = () => { voices = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('en')); };
+    populate();
+    window.speechSynthesis.onvoiceschanged = populate;
+  }
+
+  function selectFormat(fmt) {
+    reminderFormat = fmt;
+    document.querySelectorAll('.format-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById('fmt-' + fmt).classList.add('selected');
+    const moodSel = document.getElementById('moodSelector');
+    const msgBox = document.getElementById('audioMsgBox');
+    const testBtn = document.getElementById('testEmailBtn');
+    const msgLabel = document.getElementById('audioMsgLabel');
+    if (fmt === 'funny') {
+      moodSel.classList.remove('hidden');
+      msgBox.classList.remove('hidden');
+      msgLabel.textContent = '😊 Nice message';
+      testBtn.classList.remove('hidden');
+    } else if (fmt === 'audio') {
+      moodSel.classList.add('hidden');
+      msgBox.classList.remove('hidden');
+      msgLabel.textContent = '🔊 Audio message';
+      testBtn.classList.remove('hidden');
+    } else {
+      moodSel.classList.add('hidden');
+      msgBox.classList.add('hidden');
+      testBtn.classList[fmt === 'email' ? 'remove' : 'add']('hidden');
+    }
+    updateAutoPreview();
+  }
+
+  function selectMood(mood) {
+    funnyMood = mood;
+    document.querySelectorAll('.mood-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById('mood-' + mood).classList.add('selected');
+    const labels = { nice: '😊 Nice message', mean: '😈 Mean message', angry: '😡 Angry message' };
+    document.getElementById('audioMsgLabel').textContent = labels[mood] || 'Message';
+    updateAutoPreview();
+  }
+
+  function setMsgMode(mode) {
+    msgMode = mode;
+    document.getElementById('tab-auto').classList.toggle('active', mode === 'auto');
+    document.getElementById('tab-manual').classList.toggle('active', mode === 'manual');
+    document.getElementById('autoMsgPreview').classList.toggle('hidden', mode === 'manual');
+    document.getElementById('customAudioMsg').classList.toggle('hidden', mode === 'auto');
+  }
+
+  function updateAutoPreview() {
+    const title = document.getElementById('fTitle') ? document.getElementById('fTitle').value.trim() || 'your reminder' : 'your reminder';
+    const desc = document.getElementById('fDesc') ? document.getElementById('fDesc').value.trim() : '';
+    let preview = '';
+    if (reminderFormat === 'audio') {
+      preview = desc || title;
+    } else if (reminderFormat === 'funny' && FUNNY_SCRIPTS[funnyMood]) {
+      preview = FUNNY_SCRIPTS[funnyMood](title, desc);
+    }
+    const el = document.getElementById('autoMsgPreview');
+    if (el) el.textContent = preview ? '"' + preview + '"' : '(description will be used as the message)';
+  }
+
+  function previewAudio() {
+    const title = document.getElementById('fTitle').value.trim() || 'your reminder';
+    const desc = document.getElementById('fDesc').value.trim();
+    let text = '';
+    if (msgMode === 'manual') {
+      text = document.getElementById('customAudioMsg').value.trim();
+      if (!text) return toast('Please enter a custom message first', 'error');
+    } else {
+      if (reminderFormat === 'funny' && FUNNY_SCRIPTS[funnyMood]) {
+        text = FUNNY_SCRIPTS[funnyMood](title, desc);
+      } else {
+        text = desc || title;
+      }
+    }
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    if (voices[0]) utter.voice = voices[0];
+    if (funnyMood === 'angry' && reminderFormat === 'funny') { utter.rate = 1.4; utter.pitch = 0.7; }
+    else if (funnyMood === 'nice' && reminderFormat === 'funny') { utter.rate = 0.9; utter.pitch = 1.3; }
+    else if (funnyMood === 'mean' && reminderFormat === 'funny') { utter.rate = 0.85; utter.pitch = 0.9; }
+    window.speechSynthesis.speak(utter);
+    toast('Playing preview...', 'success');
+  }
+
+  function togglePwd(inputId, btnId) {
+    const input = document.getElementById(inputId);
+    const btn = document.getElementById(btnId);
+    if (!input || !btn) return;
+    input.type = input.type === 'password' ? 'text' : 'password';
+    btn.textContent = input.type === 'password' ? '👁' : '🙈';
+    input.focus();
+  }
+
+  async function checkServer() {
+    const el = document.getElementById('serverStatus');
+    if (!el) return;
+    el.innerHTML = '&#x1F7E2; App ready — data stored on your PC';
+    el.style.color = '#b8f566';
+  } catch {
+      el.innerHTML = '🔴 Server offline — run <strong>npm run dev</strong> in CMD first.';
+      el.style.color = '#ff6b6b';
+    }
+  }
+
+  async function sendTestEmail() {
+    const btn = document.getElementById('testEmailBtn');
+    if (!currentUser) return toast('Please log in first', 'error');
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Sending...';
+    try {
+      const title = document.getElementById('fTitle').value.trim() || 'Test Reminder';
+      const desc = document.getElementById('fDesc').value.trim();
+      const customMsg = msgMode === 'manual' ? document.getElementById('customAudioMsg').value.trim() : '';
+      const res = await apiFetch('/reminders/test-email', {
+        method: 'POST',
+        body: JSON.stringify({ title, format: reminderFormat, mood: funnyMood, customText: customMsg || desc })
+      });
+      if (res && res.ok) toast('Test email sent to ' + currentUser.email + '!', 'success');
+      else toast('Failed. Check .env email settings.', 'error');
+    } catch { toast('Test email failed. Check .env email settings.', 'error'); }
+    finally { btn.disabled = false; btn.innerHTML = '📧 Send Test Email to My Address'; }
+  }
+
+
+
+
+
+
+
+
+
+ catch(e) { list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--danger);font-size:13px;">Error: ' + e.message + '</div>'; }
+  }
+
+
+
+  function saveLoginCredentials(email, password) {
+    localStorage.setItem('rm_email', email);
+    localStorage.setItem('rm_pass', password);
+  }
+  function loadSavedCredentials() {
+    const e = localStorage.getItem('rm_email');
+    const p = localStorage.getItem('rm_pass');
+    if (e) { const el = document.getElementById('loginEmail'); if (el) el.value = e; }
+    if (p) { const el = document.getElementById('loginPassword'); if (el) el.value = p; }
+  }
+
+  // ── Completion sound ─────────────────────────────────────────────────────
+  function playCompletionSound() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.type = 'sine'; osc.frequency.value = freq;
+        const t = ctx.currentTime + i * 0.13;
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(0.25, t + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+        osc.start(t); osc.stop(t + 0.3);
+      });
+    } catch(e) {}
+  }
+
+  // ── Admin functions ──────────────────────────────────────────────────────
+  async function loadAdminUsers() {
+    const list = document.getElementById('adminUserList');
+    if (!list) return;
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">Loading...</div>';
+    try {
+      const res = await apiFetch('/auth/admin/users');
+      if (!res || !res.ok) { list.innerHTML = '<div style="padding:20px;color:#ff6b6b;font-size:13px;">Failed to load users.</div>'; return; }
+      const data = await res.json();
+      if (!data.length) { list.innerHTML = '<div style="padding:20px;color:var(--text-muted);font-size:13px;">No users found.</div>'; return; }
+      list.innerHTML = data.map(u =>
+        '<div class="admin-user-row">' +
+          '<div class="admin-user-info">' +
+            '<span class="admin-user-email">' + u.email + (u.blocked ? ' <span style="color:#ff6b6b;font-size:10px;">[BLOCKED]</span>' : '') + '</span>' +
+            '<span class="admin-user-meta">ID: ' + u.id + ' &middot; Joined: ' + new Date(u.created_at).toLocaleDateString() + '</span>' +
+          '</div>' +
+          '<div class="admin-actions">' +
+            (u.blocked
+              ? '<button class="admin-btn admin-btn-block" onclick="adminUnblock(' + u.id + ')">Unblock</button>'
+              : '<button class="admin-btn admin-btn-block" onclick="adminBlock(' + u.id + ')">Block</button>') +
+            '<button class="admin-btn admin-btn-delete" onclick="adminDelete(' + u.id + ','' + u.email + '')">Delete</button>' +
+          '</div>' +
+        '</div>'
+      ).join('');
+    } catch(e) { list.innerHTML = '<div style="padding:20px;color:#ff6b6b;font-size:13px;">Error: ' + e.message + '</div>'; }
+  }
+
+  async function adminBlock(id) {
+    if (!confirm('Block this user?')) return;
+    const r = await apiFetch('/auth/admin/users/' + id + '/block', { method: 'POST' });
+    if (r && r.ok) loadAdminUsers();
+  }
+  async function adminUnblock(id) {
+    const r = await apiFetch('/auth/admin/users/' + id + '/unblock', { method: 'POST' });
+    if (r && r.ok) loadAdminUsers();
+  }
+  async function adminDelete(id, email) {
+    if (!confirm('Delete user ' + email + '? This cannot be undone.')) return;
+    const r = await apiFetch('/auth/admin/users/' + id, { method: 'DELETE' });
+    if (r && r.ok) loadAdminUsers();
+  }
+
+  function confirmDate() {
+    const val = document.getElementById('fDue') && document.getElementById('fDue').value;
+    const display = document.getElementById('confirmedDateDisplay');
+    if (!val || !display) return;
+    const d = new Date(val);
+    const str = d.toLocaleDateString('en-US', {weekday:'long',year:'numeric',month:'long',day:'numeric'}) + ' at ' + d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    display.style.display = 'block';
+    display.innerHTML = 'Confirmed: <strong>' + str + '</strong>';
+  }
+
+
+  // ── Local Storage Data Layer ─────────────────────────────────────────────
+  function lsGet(key) {
+    try { return JSON.parse(localStorage.getItem('remindme_' + key) || 'null'); } catch { return null; }
+  }
+  function lsSet(key, val) {
+    try { localStorage.setItem('remindme_' + key, JSON.stringify(val)); } catch {}
+  }
+  function lsGetUser() { return lsGet('user_' + (lsGet('current_user') || '')); }
+
+  function getReminders() {
+    const user = lsGet('current_user');
+    if (!user) return [];
+    return lsGet('reminders_' + user) || [];
+  }
+  function saveReminders(reminders) {
+    const user = lsGet('current_user');
+    if (!user) return;
+    lsSet('reminders_' + user, reminders);
+  }
+  function getCategories() {
+    const user = lsGet('current_user');
+    if (!user) return [];
+    return lsGet('categories_' + user) || [];
+  }
+  function saveCategories(cats) {
+    const user = lsGet('current_user');
+    if (!user) return;
+    lsSet('categories_' + user, cats);
+  }
+  function nextId(arr) {
+    return arr.length ? Math.max(...arr.map(r => r.id || 0)) + 1 : 1;
+  }
+
+  // Override apiFetch with local storage operations
+  async function apiFetch(path, options = {}) {
+    const method = (options.method || 'GET').toUpperCase();
+    const body = options.body ? JSON.parse(options.body) : null;
+
+    // AUTH
+    if (path === '/auth/login' && method === 'POST') {
+      const users = lsGet('users') || [];
+      const user = users.find(u => u.email === body.email);
+      if (!user) return fakeRes(401, { error: 'Invalid credentials' });
+      if (user.password !== body.password) return fakeRes(401, { error: 'Invalid credentials' });
+      if (user.blocked) return fakeRes(403, { error: 'Account blocked' });
+      lsSet('current_user', user.id);
+      lsSet('token', 'local_' + user.id);
+      return fakeRes(200, { token: 'local_' + user.id, user: { id: user.id, email: user.email, name: user.name } });
+    }
+    if (path === '/auth/register' && method === 'POST') {
+      const users = lsGet('users') || [];
+      if (users.find(u => u.email === body.email)) return fakeRes(409, { error: 'Email already registered' });
+      const id = nextId(users);
+      const user = { id, email: body.email, password: body.password, name: body.name || null, blocked: false, created_at: new Date().toISOString() };
+      users.push(user);
+      lsSet('users', users);
+      lsSet('current_user', id);
+      lsSet('token', 'local_' + id);
+      return fakeRes(201, { token: 'local_' + id, user: { id, email: user.email, name: user.name } });
+    }
+    if (path === '/auth/admin/users' && method === 'GET') {
+      const users = lsGet('users') || [];
+      return fakeRes(200, users.map(u => ({ id: u.id, email: u.email, name: u.name, blocked: u.blocked, created_at: u.created_at })));
+    }
+    if (path.startsWith('/auth/admin/users/') && method === 'POST') {
+      const id = parseInt(path.split('/')[4]);
+      const action = path.split('/')[5];
+      const users = lsGet('users') || [];
+      const idx = users.findIndex(u => u.id === id);
+      if (idx >= 0) { users[idx].blocked = (action === 'block'); lsSet('users', users); }
+      return fakeRes(200, { message: 'Done' });
+    }
+    if (path.startsWith('/auth/admin/users/') && method === 'DELETE') {
+      const id = parseInt(path.split('/')[4]);
+      const users = (lsGet('users') || []).filter(u => u.id !== id);
+      lsSet('users', users);
+      return fakeRes(200, { message: 'Deleted' });
+    }
+
+    // REMINDERS
+    if (path === '/reminders' && method === 'GET') {
+      return fakeRes(200, getReminders());
+    }
+    if (path === '/reminders' && method === 'POST') {
+      const reminders = getReminders();
+      const r = { ...body, id: nextId(reminders), completed: false, created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+      reminders.push(r);
+      saveReminders(reminders);
+      return fakeRes(201, r);
+    }
+    if (path.match(/^\/reminders\/\d+$/) && method === 'PATCH') {
+      const id = parseInt(path.split('/')[2]);
+      const reminders = getReminders();
+      const idx = reminders.findIndex(r => r.id === id);
+      if (idx < 0) return fakeRes(404, { error: 'Not found' });
+      reminders[idx] = { ...reminders[idx], ...body, updated_at: new Date().toISOString() };
+      saveReminders(reminders);
+      return fakeRes(200, reminders[idx]);
+    }
+    if (path.match(/^\/reminders\/\d+$/) && method === 'DELETE') {
+      const id = parseInt(path.split('/')[2]);
+      saveReminders(getReminders().filter(r => r.id !== id));
+      return fakeRes(200, { message: 'Deleted' });
+    }
+    if (path === '/reminders/categories/all' && method === 'GET') {
+      return fakeRes(200, getCategories());
+    }
+    if (path === '/reminders/categories' && method === 'POST') {
+      const cats = getCategories();
+      const cat = { ...body, id: nextId(cats), created_at: new Date().toISOString() };
+      cats.push(cat);
+      saveCategories(cats);
+      return fakeRes(201, cat);
+    }
+    if (path.match(/^\/reminders\/categories\/\d+$/) && method === 'DELETE') {
+      const id = parseInt(path.split('/')[3]);
+      saveCategories(getCategories().filter(c => c.id !== id));
+      return fakeRes(200, { message: 'Deleted' });
+    }
+    if (path.match(/^\/reminders\/filter\/upcoming/)) {
+      const reminders = getReminders().filter(r => !r.completed && r.due_at && new Date(r.due_at) > new Date());
+      return fakeRes(200, reminders.sort((a,b) => new Date(a.due_at) - new Date(b.due_at)));
+    }
+
+    // PROFILE
+    if (path === '/profile' && method === 'GET') {
+      const users = lsGet('users') || [];
+      const user = users.find(u => u.id === lsGet('current_user'));
+      return user ? fakeRes(200, user) : fakeRes(404, { error: 'Not found' });
+    }
+    if (path === '/profile' && method === 'PATCH') {
+      const users = lsGet('users') || [];
+      const idx = users.findIndex(u => u.id === lsGet('current_user'));
+      if (idx >= 0) { Object.assign(users[idx], body); lsSet('users', users); return fakeRes(200, users[idx]); }
+      return fakeRes(404, { error: 'Not found' });
+    }
+
+    // Default fallback
+    return fakeRes(404, { error: 'Not found' });
+  }
+
+  function fakeRes(status, data) {
+    return {
+      ok: status >= 200 && status < 300,
+      status,
+      json: async () => data,
+      text: async () => JSON.stringify(data),
+    };
+  }
+
+  // Token is always valid for local storage version
+  function getToken() { return lsGet('token') || 'local'; }
+
+  init();
+</script>
+</body>
+</html>
